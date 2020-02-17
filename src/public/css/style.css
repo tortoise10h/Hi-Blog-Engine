@@ -1,0 +1,194 @@
+html,
+section,
+.full-height {
+  height: 100%;
+}
+/** ===== GLOBAL ===== */
+.ul-no-list-style {
+  list-style: none;
+}
+
+.white-hover {
+  transition: 0.3s;
+}
+
+.white-hover:hover {
+  color: #fff;
+}
+
+/** ===== BUTTONS ===== */
+.rounded-btn {
+  border: none;
+  border-radius: 10em;
+  padding: 0.5em 1em;
+  transition: 0.3s;
+}
+
+.rounded-btn:hover {
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.34);
+}
+
+.save-btn {
+  background: #1abc9c;
+}
+
+/** ===== MENU SLIDER ===== */
+#main {
+  transition: margin-left 0.5s;
+  /* padding: 16px; */
+}
+
+.menu-btn {
+  z-index: 1000;
+  position: absolute;
+  left: 0.2em;
+}
+
+.sidenav {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+
+.sidenav a {
+  padding: 0.5em 0.5em 0.5em 1.6em;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+.sidenav .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+@media screen and (max-height: 450px) {
+  .sidenav {
+    padding-top: 15px;
+  }
+  .sidenav a {
+    font-size: 18px;
+  }
+}
+
+/** Custom css for directory tree */
+#directoryTree {
+  padding: 0;
+  margin: 0;
+  color: #ffffff;
+}
+
+.caret-right {
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.caret-right::before {
+  content: '\25B6';
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.caret-down::before {
+  transform: rotate(90deg);
+  -webkit-transform: rotate(90deg);
+  -moz-transform: rotate(90deg);
+  -ms-transform: rotate(90deg);
+}
+
+.directory-nested {
+  display: none;
+  color: #818181;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.folder-active {
+  display: block;
+}
+
+.root-directory-menu-text {
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.root-directory-menu-text:hover {
+  color: #fff;
+}
+
+.btn-file-action {
+  border-radius: 0.3em;
+  font-size: 0.6em;
+  border: none;
+}
+
+.btn-orange {
+  background: #ffc107;
+  color: #000;
+}
+
+.btn-orange:hover {
+  background: #b0790c;
+}
+
+.btn-red {
+  background: #c20808;
+  color: #fff;
+}
+
+.btn-red:hover {
+  background: #8a0606;
+}
+
+.btn-white {
+  background: #fff;
+  color: #000;
+}
+
+.btn-white:hover {
+  background: #ccc8c8;
+}
+
+/** ===== EDITOR PAGE ===== */
+#editor {
+  border: 1px solid #d9d9d9;
+  overflow: auto;
+  resize: none;
+  height: auto;
+  outline: none;
+
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+#markdown {
+  overflow: auto;
+  border: 1px solid #d9d9d9;
+  border-left: none;
+  height: 80vh;
+}
