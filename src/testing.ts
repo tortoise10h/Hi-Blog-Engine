@@ -1,49 +1,41 @@
 import fs from 'fs'
 import path from 'path'
 import util from 'util'
+import moment from 'moment'
 import FileDirHelpers from './helpers/file-dir-helpers'
 import HtmlBlockTemplate from './helpers/blog-html-element-template'
 
-let template = `
-<!doctype html>
-<html lang="en">
+interface IDog {
+  name: string
+  hobby?: string
+}
 
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="x-ua-compatible" content="ie=edge">
-<title>{{tagName}} | Hi's Blog</title>
-<link href="https://fonts.googleapis.com/css?family=open+sans:400,700|space+mono:400,700&display=swap&subset=vietnamese" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
-</head>
+interface IRectangle {
+  readonly width: number
+  readonly height: number
+  color?: string
+  owner: string
+}
 
-<body>
-<div class="container">
-<div class="tag-table-content">
-<ul>
-<li><a href="#">Blog one</a></li>
-<li><a href="#">Blog two</a></li>
-<li><a href="#">Blog three</a></li>
-<div id="appendNewLinkPoint"></div>
-</ul>
-</div>
-<div class="other-tag">
-{{otherTag}}
-</div>
-</div>
-</body>
+const showRectanleInfo = (rectangleInfo: IRectangle): void => {
+  const defaultSystemRec = {
+    width: 200,
+    height: 100,
+    color: 'white',
+    owner: 'anonymous'
+  }
+  console.log(`
+              width: ${rectangleInfo.width},
+              height: ${rectangleInfo.height},
+              owner: ${rectangleInfo.owner},
+              color: ${rectangleInfo.color || defaultSystemRec.color}
+              `)
+}
 
-</html>
-`
+const huyRectangle: IRectangle = {
+  width: 250,
+  height: 90,
+  owner: 'Hi'
+}
 
-const appendContent = HtmlBlockTemplate.createTagLinkBlock(
-  'https://google.com',
-  'Huy deep try'
-)
-
-const replaceRegex = new RegExp('<div id="appendNewLinkPoint"></div>', 'g')
-
-template = template.replace(replaceRegex, appendContent)
-
-console.log('===========> template ', template)
-
+showRectanleInfo(huyRectangle)

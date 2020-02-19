@@ -15,36 +15,22 @@ import TagService from '../services/tag.service'
 
 const writeFile = util.promisify(fs.writeFile)
 
-interface HtmlandMarkdownPathsReturn {
+interface IHtmlandMarkdownPathsReturn {
   htmlPath: string
   markdownPath: string
 }
 
-interface ValidBlogDirectoryCheckerReturn {
-  isOk: boolean
-  message: string
-}
-
-interface SingleFileMissingObject {
-  htmlPath: string
-  markdownPath: string
-}
-
-export interface MarkdownMetaDataObject {
+export interface IMarkdownMetaDataObject {
   title: string
   publishMode: string
   date: Date
   tags: Array<string>
 }
 
-interface IGetAllFileNamesOfHtmlDirAndMarkdownDirReturn {
-  htmlDirFilesNoExtension: Array<string>
-  markdownDirFilesNoExtension: Array<string>
-}
 class HtmlMarkdownService {
   public createHtmlandMarkdownPaths(
     fileName: string
-  ): HtmlandMarkdownPathsReturn {
+  ): IHtmlandMarkdownPathsReturn {
     const htmlPath = `${process.env.SERVER_BLOG_DIRECTORY}/${constants.HTML_DIR_NAME}/${fileName}.html`
     const markdownPath = `${process.env.SERVER_BLOG_DIRECTORY}/${constants.MARKDOWN_DIR_NAME}/${fileName}.md`
     return {
@@ -161,7 +147,9 @@ class HtmlMarkdownService {
     return result
   }
 
-  public getMarkdownMetaData(markdownFilePath: string): MarkdownMetaDataObject {
+  public getMarkdownMetaData(
+    markdownFilePath: string
+  ): IMarkdownMetaDataObject {
     /** Get markdown content from file */
     const markdownContent = fs.readFileSync(markdownFilePath, {
       encoding: 'utf-8'
@@ -170,7 +158,7 @@ class HtmlMarkdownService {
     let metaDataString = this.getMarkdownMetaDatStringPart(markdownContent)
     metaDataString = metaDataString.trim()
 
-    const metaDataObject: MarkdownMetaDataObject = this.convertMetaDataStringToObject(
+    const metaDataObject: IMarkdownMetaDataObject = this.convertMetaDataStringToObject(
       metaDataString
     )
 
@@ -179,8 +167,8 @@ class HtmlMarkdownService {
 
   public convertMetaDataStringToObject(
     metaDataString: string
-  ): MarkdownMetaDataObject {
-    let metaDataObject: MarkdownMetaDataObject = {
+  ): IMarkdownMetaDataObject {
+    let metaDataObject: IMarkdownMetaDataObject = {
       title: '',
       date: new Date(),
       tags: [''],
@@ -219,7 +207,7 @@ class HtmlMarkdownService {
           break
         }
         case 'tags': {
-          const blogTagsArray = this.parseBlogTagsStringToArray(
+          const blogTagsArray = TagService.parseBlogTagsStringToArray(
             metaValueArray[1]
           )
           metaDataObject.tags = blogTagsArray

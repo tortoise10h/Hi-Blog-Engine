@@ -170,6 +170,19 @@ class TagService {
 
     return result
   }
+
+  public parseBlogTagsStringToArray(blogTagsString: string): Array<string> {
+    let blogTagsArray = blogTagsString.split(',')
+
+    /** Blank space element will be remove */
+    blogTagsArray = blogTagsArray
+      .filter(tag => {
+        return /\w+/.test(tag)
+      })
+      .map(tag => tag.trim())
+
+    return blogTagsArray
+  }
 }
 
 export default new TagService()

@@ -4,6 +4,7 @@ import fs from 'fs'
 import path from 'path'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import BlogDirectoryService from '../services/blog-directory.service'
+import BlogIndexService from '../services/blog-index.service'
 import APIError from '../helpers/api-error'
 import constants from '../common/constants'
 import APIResponse from '../helpers/api-response'
@@ -90,7 +91,7 @@ class BlogDirectoryController {
         constants.HTML_DIR_NAME
       )
 
-      await BlogDirectoryService.generateIndexHtmlFile(
+      await BlogIndexService.generateIndexHtmlFile(
         blogRootPath,
         blogDefaultUrl,
         htmlDirPath,

@@ -1,9 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import httpStatus from 'http-status'
 import FileDirHelpers from '../helpers/file-dir-helpers'
-import BlogDirectoryService, {
-  MarkdownMetaDataObject
-} from '../services/blog-directory.service'
+import HtmlAndMarkdownService from '../services/html-markdown.service'
 import APIError from '../helpers/api-error'
 
 class BlogController {
@@ -20,9 +18,9 @@ class BlogController {
       } = req.body
 
       /** Check files exist or not */
-      const { markdownPath } = BlogDirectoryService.createHtmlandMarkdownPaths(
-        newFileName
-      )
+      const {
+        markdownPath
+      } = HtmlAndMarkdownService.createHtmlandMarkdownPaths(newFileName)
       if (FileDirHelpers.isFileExisted(markdownPath)) {
         return next(
           new APIError(httpStatus.BAD_REQUEST, 'file name is already existed')
@@ -30,7 +28,7 @@ class BlogController {
       }
 
       /** Save html & markdown path */
-      await BlogDirectoryService.saveMarkdownandHtmlFileProcess(
+      await HtmlAndMarkdownService.saveMarkdownandHtmlFileProcess(
         newFileName,
         htmlContent,
         markdownContent,
@@ -41,7 +39,7 @@ class BlogController {
       )
 
       /** Get blog meta data object to use at next middleware -> save file to tag */
-      const metaDataObject = BlogDirectoryService.getMarkdownMetaData(
+      const metaDataObject = HtmlAndMarkdownService.getMarkdownMetaData(
         markdownPath
       )
 

@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
-import httpStatus from 'http-status'
 import path from 'path'
-import FileDirHelpers from '../helpers/file-dir-helpers'
 import TagService from '../services/tag.service'
-import APIError from '../helpers/api-error'
 import constants from '../common/constants'
 
 class TagController {
