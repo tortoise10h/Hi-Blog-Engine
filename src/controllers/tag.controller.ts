@@ -1,25 +1,33 @@
 import { Request, Response, NextFunction } from 'express'
-import httpStatus from 'http-status'
 import path from 'path'
-import FileDirHelpers from '../helpers/file-dir-helpers'
 import TagService from '../services/tag.service'
-import APIError from '../helpers/api-error'
+import FileDirHelpers from '../helpers/file-dir-helpers'
 import constants from '../common/constants'
+import APIResponse from '../helpers/api-response'
 
 class TagController {
+  private readonly blogDefaultUrl: string
+  private readonly blogRootPath: string
+  private readonly tagDirPath: string
+
+  constructor(
+    blogRootPath: string,
+    blogDefaultUrl: string,
+    tagDirPath: string
+  ) {
+    this.blogDefaultUrl = blogDefaultUrl
+    this.blogRootPath = blogRootPath
+    this.tagDirPath = tagDirPath
+  }
+
   public async saveFileToTag(req: any, res: Response, next: NextFunction) {
     try {
       const { newFileName } = req.body
       const { metaDataObject } = req
 
-      const blogDefaultUrl: string =
-        process.env.SERVER_BLOG_DEFAULT_URL || 'localhost:5099'
-      const blogRootPath: string = process.env.SERVER_BLOG_DIRECTORY || ''
-      const tagDirPath = path.join(blogRootPath, constants.TAG_DIR_NAME)
-
       await TagService.saveBlogLinkToTagFile(
-        blogDefaultUrl,
-        tagDirPath,
+        this.blogDefaultUrl,
+        this.tagDirPath,
         `${newFileName}.html`,
         metaDataObject
       )
@@ -29,6 +37,40 @@ class TagController {
       return next(error)
     }
   }
+
+  public async handleTagsOfBlogEdit(
+    req: any,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { editedFile } = req.params
+      const { newBlogMetaDatObject, oldBlogMetaDataObject } = req
+      const htmlFile = FileDirHelpers.changeFileExtension(
+        editedFile,
+        '.md',
+        '.html'
+      )
+      const blogLink: string = path.join(
+        this.blogDefaultUrl,
+        constants.HTML_DIR_NAME,
+        htmlFile
+      )
+
+      TagService.handleTagOfBlogEdit(
+        newBlogMetaDatObject,
+        oldBlogMetaDataObject,
+        blogLink,
+        this.tagDirPath,
+        this.blogDefaultUrl,
+        htmlFile
+      )
+
+      return APIResponse.success(res, 'Edit blog successfully')
+    } catch (error) {
+      return next(error)
+    }
+  }
 }
 
-export default new TagController()
+export default TagController

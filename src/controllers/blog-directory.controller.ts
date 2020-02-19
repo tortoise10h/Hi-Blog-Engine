@@ -1,14 +1,30 @@
 import { Request, Response, NextFunction } from 'express'
 import httpStatus from 'http-status'
 import fs from 'fs'
-import path from 'path'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import BlogDirectoryService from '../services/blog-directory.service'
+import BlogIndexService from '../services/blog-index.service'
 import APIError from '../helpers/api-error'
-import constants from '../common/constants'
 import APIResponse from '../helpers/api-response'
 
 class BlogDirectoryController {
+  private readonly markdownDirPath: string
+  private readonly htmlDirPath: string
+  private readonly blogRootPath: string
+  private readonly blogDefaultUrl: string
+
+  constructor(
+    blogRootPath: string,
+    blogDefaultUrl: string,
+    markdownDirPath: string,
+    htmlDirPath: string
+  ) {
+    this.blogRootPath = blogRootPath
+    this.blogDefaultUrl = blogDefaultUrl
+    this.markdownDirPath = markdownDirPath
+    this.htmlDirPath = htmlDirPath
+  }
+
   public async checkValidRootBlogDirectory(
     req: any,
     res: Response,
@@ -17,16 +33,14 @@ class BlogDirectoryController {
     try {
       /** Check valid root blog dir path */
       const { isOk, message } = BlogDirectoryService.isBlogDirectoryValid(
-        process.env.SERVER_BLOG_DIRECTORY || ''
+        this.blogRootPath
       )
       if (!isOk) {
         return next(new APIError(httpStatus.BAD_REQUEST, message))
       }
 
       /** Check markdown directory and create if is doesn't exist */
-      FileDirHelpers.createDirectoryIfNotExists(
-        `${process.env.SERVER_BLOG_DIRECTORY}/${constants.MARKDOWN_DIR_NAME}`
-      )
+      FileDirHelpers.createDirectoryIfNotExists(this.markdownDirPath)
 
       return next()
     } catch (err) {
@@ -36,8 +50,7 @@ class BlogDirectoryController {
 
   public getAllMarkdownFiles(req: any, res: Response, next: NextFunction) {
     try {
-      const markdownDirPath: string = `${process.env.SERVER_BLOG_DIRECTORY}/${constants.MARKDOWN_DIR_NAME}`
-      const rootDir = fs.readdirSync(markdownDirPath)
+      const rootDir = fs.readdirSync(this.markdownDirPath)
 
       /** Pass all directories and files inside markdown directory to req and move to next middleware */
       req.rootDir = rootDir
@@ -54,18 +67,9 @@ class BlogDirectoryController {
     next: NextFunction
   ) {
     try {
-      const markdownDirPath: string = path.join(
-        process.env.SERVER_BLOG_DIRECTORY || '',
-        constants.MARKDOWN_DIR_NAME
-      )
-      const htmlDirPath: string = path.join(
-        process.env.SERVER_BLOG_DIRECTORY || '',
-        constants.HTML_DIR_NAME
-      )
-
       await BlogDirectoryService.createMissingFilesInHtmlDirFromMarkdownDir(
-        markdownDirPath,
-        htmlDirPath
+        this.markdownDirPath,
+        this.htmlDirPath
       )
       return next()
     } catch (error) {
@@ -79,22 +83,11 @@ class BlogDirectoryController {
     next: NextFunction
   ) {
     try {
-      const blogRootPath: string = process.env.SERVER_BLOG_DIRECTORY || ''
-      const blogDefaultUrl: string = process.env.SERVER_BLOG_DEFAULT_URL || ''
-      const markdownDirPath: string = path.join(
-        process.env.SERVER_BLOG_DIRECTORY || '',
-        constants.MARKDOWN_DIR_NAME
-      )
-      const htmlDirPath: string = path.join(
-        process.env.SERVER_BLOG_DIRECTORY || '',
-        constants.HTML_DIR_NAME
-      )
-
-      await BlogDirectoryService.generateIndexHtmlFile(
-        blogRootPath,
-        blogDefaultUrl,
-        htmlDirPath,
-        markdownDirPath
+      await BlogIndexService.generateIndexHtmlFile(
+        this.blogRootPath,
+        this.blogDefaultUrl,
+        this.htmlDirPath,
+        this.markdownDirPath
       )
 
       return APIResponse.success(res, 'Save file successfully')
@@ -104,4 +97,4 @@ class BlogDirectoryController {
   }
 }
 
-export default new BlogDirectoryController()
+export default BlogDirectoryController

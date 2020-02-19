@@ -1,7 +1,4 @@
 window.onload = () => {
-  let fileName
-  let category
-
   let editor = document.getElementById('editor')
   const markdownArea = document.getElementById('markdown')
 

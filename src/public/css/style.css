@@ -170,11 +170,11 @@ section,
 }
 
 .btn-white:hover {
-  background: #ccc8c8;
+  background: #a8a5a5;
 }
 
 /** ===== EDITOR PAGE ===== */
-#editor {
+.markdown-editor {
   border: 1px solid #d9d9d9;
   overflow: auto;
   resize: none;
@@ -186,7 +186,7 @@ section,
   box-shadow: none;
 }
 
-#markdown {
+.markdown-display {
   overflow: auto;
   border: 1px solid #d9d9d9;
   border-left: none;

@@ -15,36 +15,28 @@ import TagService from '../services/tag.service'
 
 const writeFile = util.promisify(fs.writeFile)
 
-interface HtmlandMarkdownPathsReturn {
+interface IHtmlandMarkdownPathsReturn {
   htmlPath: string
   markdownPath: string
 }
 
-interface ValidBlogDirectoryCheckerReturn {
-  isOk: boolean
-  message: string
+interface IBlogEditInfo {
+  metaDataObject: IMarkdownMetaDataObject
+  markdownContent: string
 }
 
-interface SingleFileMissingObject {
-  htmlPath: string
-  markdownPath: string
-}
-
-export interface MarkdownMetaDataObject {
+export interface IMarkdownMetaDataObject {
   title: string
   publishMode: string
   date: Date
   tags: Array<string>
+  [propName: string]: any
 }
 
-interface IGetAllFileNamesOfHtmlDirAndMarkdownDirReturn {
-  htmlDirFilesNoExtension: Array<string>
-  markdownDirFilesNoExtension: Array<string>
-}
 class HtmlMarkdownService {
   public createHtmlandMarkdownPaths(
     fileName: string
-  ): HtmlandMarkdownPathsReturn {
+  ): IHtmlandMarkdownPathsReturn {
     const htmlPath = `${process.env.SERVER_BLOG_DIRECTORY}/${constants.HTML_DIR_NAME}/${fileName}.html`
     const markdownPath = `${process.env.SERVER_BLOG_DIRECTORY}/${constants.MARKDOWN_DIR_NAME}/${fileName}.md`
     return {
@@ -161,26 +153,32 @@ class HtmlMarkdownService {
     return result
   }
 
-  public getMarkdownMetaData(markdownFilePath: string): MarkdownMetaDataObject {
-    /** Get markdown content from file */
-    const markdownContent = fs.readFileSync(markdownFilePath, {
-      encoding: 'utf-8'
-    })
+  public getMarkdownMetaData(
+    markdownFilePath: string
+  ): IMarkdownMetaDataObject {
+    try {
+      /** Get markdown content from file */
+      const markdownContent = fs.readFileSync(markdownFilePath, {
+        encoding: 'utf-8'
+      })
 
-    let metaDataString = this.getMarkdownMetaDatStringPart(markdownContent)
-    metaDataString = metaDataString.trim()
+      let metaDataString = this.getMarkdownMetaDatStringPart(markdownContent)
+      metaDataString = metaDataString.trim()
 
-    const metaDataObject: MarkdownMetaDataObject = this.convertMetaDataStringToObject(
-      metaDataString
-    )
+      const metaDataObject: IMarkdownMetaDataObject = this.convertMetaDataStringToObject(
+        metaDataString
+      )
 
-    return metaDataObject
+      return metaDataObject
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
   }
 
   public convertMetaDataStringToObject(
     metaDataString: string
-  ): MarkdownMetaDataObject {
-    let metaDataObject: MarkdownMetaDataObject = {
+  ): IMarkdownMetaDataObject {
+    let metaDataObject: IMarkdownMetaDataObject = {
       title: '',
       date: new Date(),
       tags: [''],
@@ -219,7 +217,7 @@ class HtmlMarkdownService {
           break
         }
         case 'tags': {
-          const blogTagsArray = this.parseBlogTagsStringToArray(
+          const blogTagsArray = TagService.parseBlogTagsStringToArray(
             metaValueArray[1]
           )
           metaDataObject.tags = blogTagsArray
@@ -248,6 +246,106 @@ class HtmlMarkdownService {
     )
 
     return metaDataString
+  }
+
+  public getBlogEditInfo(markdownFilePath: string): IBlogEditInfo {
+    /** Make sure file is exists */
+    if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
+      throw new APIError(httpStatus.BAD_REQUEST, 'File is not existed')
+    }
+
+    /** Get blog edit info */
+    const metaDataObject: IMarkdownMetaDataObject = this.getMarkdownMetaData(
+      markdownFilePath
+    )
+    const markdownContent: string = fs.readFileSync(markdownFilePath, {
+      encoding: 'utf-8'
+    })
+    const markdownContentWithoutMetaData = this.getMarkdownContentWithoutMetaData(
+      markdownContent
+    )
+
+    return {
+      metaDataObject,
+      markdownContent: markdownContentWithoutMetaData
+    }
+  }
+
+  public async editBlog(
+    markdownDirPath: string,
+    htmlDirPath: string,
+    markdownFile: string,
+    markdownContent: string,
+    htmlContent: string,
+    metaDataObject: IMarkdownMetaDataObject
+  ): Promise<any> {
+    try {
+      const { date, tags, title, publishMode } = metaDataObject
+
+      const htmlFile = FileDirHelpers.changeFileExtension(
+        markdownFile,
+        '.md',
+        '.html'
+      )
+
+      const markdownFilePath: string = path.join(markdownDirPath, markdownFile)
+      const htmlFilePath: string = path.join(htmlDirPath, htmlFile)
+
+      const metaDataString = this.createMarkdownFileMetaData(
+        date,
+        title,
+        tags,
+        publishMode
+      )
+
+      markdownContent += metaDataString
+
+      return this.writeEditBlogProcess(
+        htmlFilePath,
+        markdownFilePath,
+        markdownContent,
+        htmlContent
+      )
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
+  }
+
+  public writeEditBlogProcess(
+    htmlFilePath: string,
+    markdownFilePath: string,
+    markdownContent: string,
+    htmlContent: string
+  ): Promise<any> {
+    try {
+      const writeProcess = new Promise(resolve => {
+        writeFile(markdownFilePath, markdownContent, {
+          encoding: 'utf-8'
+        })
+          .then(() => resolve('ok'))
+          .catch(err => {
+            console.log(
+              `[ERROR] ==========> Edit html file ${htmlFilePath} error `,
+              err
+            )
+            throw new APIError(httpStatus.BAD_REQUEST, '', err)
+          })
+
+        writeFile(htmlFilePath, htmlContent, { encoding: 'utf-8' })
+          .then(() => resolve('ok'))
+          .catch(err => {
+            console.log(
+              `[ERROR] ==========> Edit html file ${htmlFilePath} error `,
+              err
+            )
+            throw new APIError(httpStatus.BAD_REQUEST, '', err)
+          })
+      })
+
+      return Promise.resolve(writeProcess)
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
   }
 }
 

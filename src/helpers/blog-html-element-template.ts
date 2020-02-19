@@ -1,18 +1,28 @@
 class BlogHtmlElementTemplate {
-  public static createTagLinkBlock(blogLink: string, title: string): string {
-    return `      <li><a href="${blogLink}">${title}</a></li>
-              <div id="appendNewLinkPoint"></div>`
-  }
-
-  public static createHomepageLinkBlock(
+  public static createTagBlogLinkWithAppendPoint(
     blogLink: string,
     title: string
   ): string {
     return `
-      <li>
-        <a href="${blogLink}">${title}</a>
-      </li>
-    `
+    ${BlogHtmlElementTemplate.createTagBlogLink(blogLink, title)}
+    <div id="appendNewLinkPoint"></div>`
+  }
+
+  public static createTagBlogLink(blogLink: string, title: string): string {
+    return `
+            <li>
+              <a href="${blogLink}">${title}</a>
+            </li>`
+  }
+
+  public static createHomePageBlogLink(
+    blogLink: string,
+    title: string
+  ): string {
+    return `
+    <li>
+    <a href="${blogLink}">${title}</a>
+    </li>`
   }
 }
 

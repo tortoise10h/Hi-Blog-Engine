@@ -1,0 +1,67 @@
+{{!--  <div class="info-save-popup-background" id="infoSavePopupBackground">  --}}
+  {{!--  <div class="info-save-popup" id="infoSavePopup">  --}}
+    {{!--  <div>  --}}
+      {{!--  <span class="info-save-popup-close" id="infoSavePopupClose">&times;</span>  --}}
+    {{!--  </div>  --}}
+    {{!--  <div class="form-group">  --}}
+      {{!--  <input id="newFileName" class="form-control" type="text" name="new-file-name" placeholder="Enter file name...">  --}}
+      {{!--  <p id="fileNameAlert" style="padding: 0 0.5em"></p>  --}}
+    {{!--  </div>  --}}
+    {{!--  <div style="text-align:right">  --}}
+      {{!--  <button class="my-2 rounded-btn save-btn" id="confirmSaveBtn" style="color:white">  --}}
+        {{!--  Confirm Save  --}}
+      {{!--  </button>  --}}
+    {{!--  </div>  --}}
+  {{!--  </div>  --}}
+{{!--  </div>  --}}
+{{!--  Blog meta data zone  --}}
+<section class="py-2 bg-light">
+  <div class="row container-fluid" style="padding: 0 2em; margin: auto">
+    <div class="col-md-6 row">
+      <div class="col-md-8">
+        <label for="old-blog-title">Title</label>
+        <input class="form-control" name="old-blog-title" id="oldBlogTitle" placeholder="Enter the blog title..." value="{{metaDataObject.title}}">
+        <p id="oldBlogTitleAlert"></p>
+      </div>
+      <div class="col-md-4">
+        <label for="old-blog-date">Date</label>
+        <input name="old-blog-date" id="oldBlogDate" class="form-control" type="date" value="{{metaDataObject.dateString}}">
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="row px-3">
+        <div class="col-md-8">
+          <label for="old-blog-tags">Tags</label>
+          <input name="old-blog-tags" id="oldBlogTags" placeholder="Enter tags of blog, split by comma (,)..." class="form-control" value="{{metaDataObject.tags}}">
+          <p id="oldBlogTagsAlert"></p>
+        </div>
+        <div class="col-md-4">
+          <label>Publish Mode</label>
+          <select id="oldPublishModeSelect" class="custom-select">
+            <option value="publish">Publish</option>
+            <option value="private">Private</option>
+            <option value="none-publish">None publish</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{{!--  Editor zone  --}}
+<section class="row" style="margin: auto">
+  <textarea class="col-md-6 full-height markdown-display" rows="20" id="editorOfOldBlog">{{markdownContent}}</textarea>
+  <div class="col-md-6 full-height markdown-display" id="markdownOfOldBlog"></div>
+</section>
+<div class="float-right py-3">
+  <button id="saveEditedBlogBtn" class="rounded-btn save-btn">
+    <strong style="color: white">
+      <i class="fa fa-save"></i> Save blog
+    </strong>
+  </button>
+</div>
+
+
+{{!--  Script zone  --}}
+{{#section 'script'}}
+  <script src="/script/editor/blog-edit-script.js"></script>
+{{/section}}
