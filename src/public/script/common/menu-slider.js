@@ -11,11 +11,23 @@ const closeNav = () => {
 }
 
 let toggler = document.getElementsByClassName('caret-right')
-console.log('===========> toggler :>', toggler)
 
-for(let i = 0; i < toggler.length; i++) {
-  toggler[i].addEventListener('click', function () {
-    this.parentElement.querySelector('.directory-nested').classList.toggle('folder-active')
+for (let i = 0; i < toggler.length; i++) {
+  toggler[i].addEventListener('click', function() {
+    this.parentElement
+      .querySelector('.directory-nested')
+      .classList.toggle('folder-active')
     this.classList.toggle('caret-down')
+  })
+}
+
+/** ======== Handle action buttons ======== */
+editFileBtns = document.getElementsByClassName('btn-edit-file')
+for (let i = 0; i < editFileBtns.length; i++) {
+  /** Add listener for all edit buttons to redirect to edit selected file */
+  editFileBtns[i].addEventListener('click', () => {
+    const markdownFile = editFileBtns[i].value
+    console.log(`markdown file: ${markdownFile}`)
+    window.location.href = `${DEFAULT_URL}/blog-edit/${markdownFile}`
   })
 }

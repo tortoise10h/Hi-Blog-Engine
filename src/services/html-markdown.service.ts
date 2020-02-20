@@ -20,11 +20,17 @@ interface IHtmlandMarkdownPathsReturn {
   markdownPath: string
 }
 
+interface IBlogEditInfo {
+  metaDataObject: IMarkdownMetaDataObject
+  markdownContent: string
+}
+
 export interface IMarkdownMetaDataObject {
   title: string
   publishMode: string
   date: Date
   tags: Array<string>
+  [propName: string]: any
 }
 
 class HtmlMarkdownService {
@@ -236,6 +242,48 @@ class HtmlMarkdownService {
     )
 
     return metaDataString
+  }
+
+  public getBlogEditInfo(markdownFilePath: string): IBlogEditInfo {
+    /** Make sure file is exists */
+    if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
+      throw new APIError(httpStatus.BAD_REQUEST, 'File is not existed')
+    }
+
+    /** Get blog edit info */
+    const metaDataObject: IMarkdownMetaDataObject = this.getMarkdownMetaData(
+      markdownFilePath
+    )
+    const markdownContent: string = fs.readFileSync(markdownFilePath, {
+      encoding: 'utf-8'
+    })
+    const markdownContentWithoutMetaData = this.getMarkdownContentWithoutMetaData(
+      markdownContent
+    )
+
+    return {
+      metaDataObject,
+      markdownContent: markdownContentWithoutMetaData
+    }
+  }
+
+  public editBlog(
+    markdownDirPath: string,
+    htmlDirPath: string,
+    markdownFile: string,
+    markdownContent: string,
+    htmlContent: string,
+    metaDataObject: IMarkdownMetaDataObject
+  ) {
+    console.log('===========> blog service -> edit blog -> got here')
+    if (
+      !FileDirHelpers.isFileExisted(path.join(markdownDirPath, markdownFile))
+    ) {
+      throw new APIError(
+        httpStatus.BAD_REQUEST,
+        `File ${markdownFile} doesn't exist`
+      )
+    }
   }
 }
 

@@ -17,25 +17,48 @@ interface IRectangle {
   owner: string
 }
 
-const showRectanleInfo = (rectangleInfo: IRectangle): void => {
-  const defaultSystemRec = {
-    width: 200,
-    height: 100,
-    color: 'white',
-    owner: 'anonymous'
-  }
-  console.log(`
-              width: ${rectangleInfo.width},
-              height: ${rectangleInfo.height},
-              owner: ${rectangleInfo.owner},
-              color: ${rectangleInfo.color || defaultSystemRec.color}
-              `)
+interface IGreetingFunc {
+  (message: string, name: string): void
 }
 
-const huyRectangle: IRectangle = {
-  width: 250,
-  height: 90,
-  owner: 'Hi'
+interface IShape {
+  shapeColor: string
 }
 
-showRectanleInfo(huyRectangle)
+interface ISquare {
+  [index: string]: number
+  [index: number]: number
+}
+
+const square: ISquare = {
+  width: 100,
+  shapeColor: 'blue'
+}
+
+// const showRectanleInfo = (rectangleInfo: IRectangle): void => {
+// const defaultSystemRec = {
+// width: 200,
+// height: 100,
+// color: 'white',
+// owner: 'anonymous'
+// }
+// console.log(`
+// width: ${rectangleInfo.width},
+// height: ${rectangleInfo.height},
+// owner: ${rectangleInfo.owner},
+// color: ${rectangleInfo.color || defaultSystemRec.color}
+// `)
+// }
+
+// const huyRectangle: IRectangle = {
+// width: 250,
+// height: 90,
+// owner: 'Hi'
+// }
+
+// const fakeHuyRec = {
+// owner: 'Hi',
+// colour: 'white'
+// }
+
+// showRectanleInfo(fakeHuyRec)

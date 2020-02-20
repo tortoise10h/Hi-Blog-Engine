@@ -2,8 +2,6 @@ import express, { Request, Response, NextFunction, Application } from 'express'
 import exhbs from 'express-handlebars'
 import bodyParser from 'body-parser'
 import path from 'path'
-import fs from 'fs'
-import Redis from './lib/redis'
 import dotenv from 'dotenv'
 dotenv.config()
 import APIResponse from './helpers/api-response'
@@ -16,6 +14,10 @@ const PORT = process.env.SERVER_PORT || 5099
 /** Init app */
 const app: Application = express()
 
+app.get('/huy', (req, res) => {
+  res.end('Yo')
+})
+
 /** View engine */
 app.set('views', 'src/views')
 app.engine(
@@ -24,6 +26,9 @@ app.engine(
     defaultLayout: 'main',
     layoutsDir: 'src/views/layouts',
     helpers: {
+      /** Only load script at specific file
+       * Script files will be put inside {{#secion 'script'}} {{/section}}
+       * */
       section: function(name: string, options: any) {
         if (!this._sections) this._sections = {}
         this._sections[name] = options.fn(this)
@@ -45,6 +50,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(EnvFileHelpers.checkEnvImportantFieldsToStartServer)
 
 /** Router */
+console.log(`========> router: ${router}`)
 app.use(router)
 
 /** Error handling */

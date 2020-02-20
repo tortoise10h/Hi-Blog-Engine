@@ -24,9 +24,9 @@
             <li class="white-hover">
               {{this}}
               <div>
-                <button class="btn-file-action btn-white">Edit</button>
-                <button class="btn-file-action btn-red">Delete</button>
-                <button class="btn-file-action btn-orange">View</button>
+                <button class="btn-file-action btn-white btn-edit-file" value="{{this}}">Edit</button>
+                <button class="btn-file-action btn-red" value="{{this}}">Delete</button>
+                <button class="btn-file-action btn-orange" value="{{this}}">View</button>
               </div>
             </li>
           {{/each}}
