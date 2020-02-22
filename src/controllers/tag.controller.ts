@@ -1,18 +1,23 @@
 import { Request, Response, NextFunction } from 'express'
 import path from 'path'
 import TagService from '../services/tag.service'
+import FileDirHelpers from '../helpers/file-dir-helpers'
 import constants from '../common/constants'
+import APIResponse from '../helpers/api-response'
 
 class TagController {
   private readonly blogDefaultUrl: string
   private readonly blogRootPath: string
   private readonly tagDirPath: string
 
-  constructor() {
-    this.blogDefaultUrl =
-      process.env.SERVER_BLOG_DEFAULT_URL || 'htt://localhost:5099'
-    this.blogRootPath = process.env.SERVER_BLOG_DIRECTORY || ''
-    this.tagDirPath = path.join(this.blogRootPath, constants.TAG_DIR_NAME)
+  constructor(
+    blogRootPath: string,
+    blogDefaultUrl: string,
+    tagDirPath: string
+  ) {
+    this.blogDefaultUrl = blogDefaultUrl
+    this.blogRootPath = blogRootPath
+    this.tagDirPath = tagDirPath
   }
 
   public async saveFileToTag(req: any, res: Response, next: NextFunction) {
@@ -32,6 +37,40 @@ class TagController {
       return next(error)
     }
   }
+
+  public async handleTagsOfBlogEdit(
+    req: any,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { editedFile } = req.params
+      const { newBlogMetaDatObject, oldBlogMetaDataObject } = req
+      const htmlFile = FileDirHelpers.changeFileExtension(
+        editedFile,
+        '.md',
+        '.html'
+      )
+      const blogLink: string = path.join(
+        this.blogDefaultUrl,
+        constants.HTML_DIR_NAME,
+        htmlFile
+      )
+
+      TagService.handleTagOfBlogEdit(
+        newBlogMetaDatObject,
+        oldBlogMetaDataObject,
+        blogLink,
+        this.tagDirPath,
+        this.blogDefaultUrl,
+        htmlFile
+      )
+
+      return APIResponse.success(res, 'Edit blog successfully')
+    } catch (error) {
+      return next(error)
+    }
+  }
 }
 
-export default new TagController()
+export default TagController

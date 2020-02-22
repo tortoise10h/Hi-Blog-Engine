@@ -41,10 +41,14 @@ class FileDirHelpers {
   }
 
   public isFileExisted(path: string): boolean {
-    if (fs.existsSync(path)) {
-      return true
+    try {
+      if (fs.existsSync(path)) {
+        return true
+      }
+      return false
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
     }
-    return false
   }
 
   public isDirectoryExisted(dirPath: string): boolean {

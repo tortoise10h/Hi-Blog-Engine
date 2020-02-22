@@ -156,19 +156,23 @@ class HtmlMarkdownService {
   public getMarkdownMetaData(
     markdownFilePath: string
   ): IMarkdownMetaDataObject {
-    /** Get markdown content from file */
-    const markdownContent = fs.readFileSync(markdownFilePath, {
-      encoding: 'utf-8'
-    })
+    try {
+      /** Get markdown content from file */
+      const markdownContent = fs.readFileSync(markdownFilePath, {
+        encoding: 'utf-8'
+      })
 
-    let metaDataString = this.getMarkdownMetaDatStringPart(markdownContent)
-    metaDataString = metaDataString.trim()
+      let metaDataString = this.getMarkdownMetaDatStringPart(markdownContent)
+      metaDataString = metaDataString.trim()
 
-    const metaDataObject: IMarkdownMetaDataObject = this.convertMetaDataStringToObject(
-      metaDataString
-    )
+      const metaDataObject: IMarkdownMetaDataObject = this.convertMetaDataStringToObject(
+        metaDataString
+      )
 
-    return metaDataObject
+      return metaDataObject
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
   }
 
   public convertMetaDataStringToObject(
@@ -267,22 +271,80 @@ class HtmlMarkdownService {
     }
   }
 
-  public editBlog(
+  public async editBlog(
     markdownDirPath: string,
     htmlDirPath: string,
     markdownFile: string,
     markdownContent: string,
     htmlContent: string,
     metaDataObject: IMarkdownMetaDataObject
-  ) {
-    console.log('===========> blog service -> edit blog -> got here')
-    if (
-      !FileDirHelpers.isFileExisted(path.join(markdownDirPath, markdownFile))
-    ) {
-      throw new APIError(
-        httpStatus.BAD_REQUEST,
-        `File ${markdownFile} doesn't exist`
+  ): Promise<any> {
+    try {
+      const { date, tags, title, publishMode } = metaDataObject
+
+      const htmlFile = FileDirHelpers.changeFileExtension(
+        markdownFile,
+        '.md',
+        '.html'
       )
+
+      const markdownFilePath: string = path.join(markdownDirPath, markdownFile)
+      const htmlFilePath: string = path.join(htmlDirPath, htmlFile)
+
+      const metaDataString = this.createMarkdownFileMetaData(
+        date,
+        title,
+        tags,
+        publishMode
+      )
+
+      markdownContent += metaDataString
+
+      return this.writeEditBlogProcess(
+        htmlFilePath,
+        markdownFilePath,
+        markdownContent,
+        htmlContent
+      )
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
+  }
+
+  public writeEditBlogProcess(
+    htmlFilePath: string,
+    markdownFilePath: string,
+    markdownContent: string,
+    htmlContent: string
+  ): Promise<any> {
+    try {
+      const writeProcess = new Promise(resolve => {
+        writeFile(markdownFilePath, markdownContent, {
+          encoding: 'utf-8'
+        })
+          .then(() => resolve('ok'))
+          .catch(err => {
+            console.log(
+              `[ERROR] ==========> Edit html file ${htmlFilePath} error `,
+              err
+            )
+            throw new APIError(httpStatus.BAD_REQUEST, '', err)
+          })
+
+        writeFile(htmlFilePath, htmlContent, { encoding: 'utf-8' })
+          .then(() => resolve('ok'))
+          .catch(err => {
+            console.log(
+              `[ERROR] ==========> Edit html file ${htmlFilePath} error `,
+              err
+            )
+            throw new APIError(httpStatus.BAD_REQUEST, '', err)
+          })
+      })
+
+      return Promise.resolve(writeProcess)
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
     }
   }
 }

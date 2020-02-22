@@ -3,25 +3,26 @@ import httpStatus from 'http-status'
 import path from 'path'
 import moment from 'moment'
 import FileDirHelpers from '../helpers/file-dir-helpers'
-import HtmlAndMarkdownService from '../services/html-markdown.service'
+import HtmlAndMarkdownService, {
+  IMarkdownMetaDataObject
+} from '../services/html-markdown.service'
 import APIError from '../helpers/api-error'
 import APIResponse from '../helpers/api-response'
 import constants from '../common/constants'
 
 class BlogController {
-  private markdownDirPath: string
-  private htmlDirPath: string
-  private blogRootPath: string
+  private readonly markdownDirPath: string
+  private readonly htmlDirPath: string
+  private readonly blogRootPath: string
 
-  constructor() {
-    this.blogRootPath = process.env.SERVER_BLOG_DIRECTORY || ''
-    this.markdownDirPath = path.join(
-      this.blogRootPath,
-      constants.MARKDOWN_DIR_NAME
-    )
-    this.htmlDirPath = path.join(this.blogRootPath, constants.HTML_DIR_NAME)
-
-    console.log(this.markdownDirPath)
+  constructor(
+    blogRootPath: string,
+    markdownDirPath: string,
+    htmlDirPath: string
+  ) {
+    this.blogRootPath = blogRootPath
+    this.markdownDirPath = markdownDirPath
+    this.htmlDirPath = htmlDirPath
   }
 
   public async saveBlog(req: any, res: Response, next: NextFunction) {
@@ -72,9 +73,10 @@ class BlogController {
 
   public renderEditorPage(req: any, res: Response, next: NextFunction) {
     try {
-      const { filePath } = req.params
+      const { editedFile } = req.params
       const { rootDir } = req
-      const markdownFilePath = path.join(this.markdownDirPath, filePath)
+      console.log(`this: ${this}`)
+      const markdownFilePath = path.join(this.markdownDirPath, editedFile)
 
       const {
         metaDataObject,
@@ -100,29 +102,58 @@ class BlogController {
     return this.markdownDirPath
   }
 
-  // public async editBlog(req: Request, res: Response, next: NextFunction) {
-  // try {
-  // const fakeMetaData = {
-  // title: 'this is a title',
-  // date: new Date(),
-  // publishMode: 'publish',
-  // tags: ['weird-tag', 'ugly-tag', 'helpful-tag']
-  // }
+  public async editBlog(req: any, res: Response, next: NextFunction) {
+    try {
+      const { editedFile }: { editedFile: string } = req.params
+      const {
+        markdownContent,
+        htmlContent,
+        metaDataObject
+      }: {
+        markdownContent: string
+        htmlContent: string
+        metaDataObject: IMarkdownMetaDataObject
+      } = req.body
+      const markdownFile = FileDirHelpers.changeFileExtension(
+        editedFile,
+        '.html',
+        '.md'
+      )
+      const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
 
-  // console.log('hey')
-  // console.log(this.getMarkdownDirPath())
-  // HtmlAndMarkdownService.editBlog(
-  // this.getMarkdownDirPath(),
-  // this.htmlDirPath,
-  // 'file-hihi.md',
-  // 'content',
-  // '<p>content</p>',
-  // fakeMetaData
-  // )
-  // } catch (error) {
-  // return next(error)
-  // }
-  // }
+      /** Make sure edit file is exists */
+      if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
+        return next(
+          new APIError(
+            httpStatus.BAD_REQUEST,
+            `File ${markdownFilePath} doesn't exist`
+          )
+        )
+      }
+
+      const oldBlogMetaDataObject: IMarkdownMetaDataObject = HtmlAndMarkdownService.getMarkdownMetaData(
+        markdownFilePath
+      )
+
+      await HtmlAndMarkdownService.editBlog(
+        this.markdownDirPath,
+        this.htmlDirPath,
+        markdownFile,
+        markdownContent,
+        htmlContent,
+        metaDataObject
+      )
+
+      /** Old data to compare link in old tag and remove & new data will use to create new link
+       * Handle those jobs in tag controller
+       * */
+      req.oldBlogMetaDataObject = oldBlogMetaDataObject
+      req.newBlogMetaDatObject = metaDataObject
+      return next()
+    } catch (error) {
+      return next(error)
+    }
+  }
 }
 
-export default new BlogController()
+export default BlogController

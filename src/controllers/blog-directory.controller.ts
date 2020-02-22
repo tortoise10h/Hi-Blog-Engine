@@ -1,32 +1,28 @@
 import { Request, Response, NextFunction } from 'express'
 import httpStatus from 'http-status'
 import fs from 'fs'
-import path from 'path'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import BlogDirectoryService from '../services/blog-directory.service'
 import BlogIndexService from '../services/blog-index.service'
 import APIError from '../helpers/api-error'
-import constants from '../common/constants'
 import APIResponse from '../helpers/api-response'
 
 class BlogDirectoryController {
   private readonly markdownDirPath: string
   private readonly htmlDirPath: string
-  private readonly blogDirectoryRoot: string
+  private readonly blogRootPath: string
   private readonly blogDefaultUrl: string
 
-  constructor() {
-    this.blogDirectoryRoot = process.env.SERVER_BLOG_DIRECTORY || ''
-    this.blogDefaultUrl =
-      process.env.SERVER_BLOG_DEFAULT_URL || 'localhost:5099'
-    this.markdownDirPath = path.join(
-      this.blogDirectoryRoot,
-      constants.MARKDOWN_DIR_NAME
-    )
-    this.htmlDirPath = path.join(
-      this.blogDirectoryRoot,
-      constants.HTML_DIR_NAME
-    )
+  constructor(
+    blogRootPath: string,
+    blogDefaultUrl: string,
+    markdownDirPath: string,
+    htmlDirPath: string
+  ) {
+    this.blogRootPath = blogRootPath
+    this.blogDefaultUrl = blogDefaultUrl
+    this.markdownDirPath = markdownDirPath
+    this.htmlDirPath = htmlDirPath
   }
 
   public async checkValidRootBlogDirectory(
@@ -37,7 +33,7 @@ class BlogDirectoryController {
     try {
       /** Check valid root blog dir path */
       const { isOk, message } = BlogDirectoryService.isBlogDirectoryValid(
-        this.blogDirectoryRoot
+        this.blogRootPath
       )
       if (!isOk) {
         return next(new APIError(httpStatus.BAD_REQUEST, message))
@@ -88,7 +84,7 @@ class BlogDirectoryController {
   ) {
     try {
       await BlogIndexService.generateIndexHtmlFile(
-        this.blogDirectoryRoot,
+        this.blogRootPath,
         this.blogDefaultUrl,
         this.htmlDirPath,
         this.markdownDirPath
@@ -101,4 +97,4 @@ class BlogDirectoryController {
   }
 }
 
-export default new BlogDirectoryController()
+export default BlogDirectoryController

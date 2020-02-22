@@ -50,7 +50,6 @@ app.use(bodyParser.urlencoded({ extended: false }))
 app.use(EnvFileHelpers.checkEnvImportantFieldsToStartServer)
 
 /** Router */
-console.log(`========> router: ${router}`)
 app.use(router)
 
 /** Error handling */

@@ -140,7 +140,7 @@ class BlogIndexService {
       )
 
       /** Create link element */
-      const htmlLinkTag = HtmlBlockTemplate.createHomepageLinkBlock(
+      const htmlLinkTag = HtmlBlockTemplate.createHomePageBlogLink(
         htmlFileHref,
         title
       )
