@@ -70,6 +70,9 @@ router
     },
     (req: any, res: Response, next: NextFunction) => {
       tagController.handleTagsOfBlogEdit(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      blogDirectoryController.updateIndexHtmlAfterUpdateBlog(req, res, next)
     }
   )
 
@@ -85,7 +88,7 @@ router.route('/blogs').post(
     blogDirectoryController.checkAndCreateMissingFileInHtmlDir(req, res, next)
   },
   (req: any, res: Response, next: NextFunction) => {
-    blogDirectoryController.generateIndexHtmlFile(req, res, next)
+    blogDirectoryController.generateIndexHtmlFileWithNewBlog(req, res, next)
   }
 )
 

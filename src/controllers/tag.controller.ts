@@ -66,7 +66,7 @@ class TagController {
         htmlFile
       )
 
-      return APIResponse.success(res, 'Edit blog successfully')
+      return next()
     } catch (error) {
       return next(error)
     }
