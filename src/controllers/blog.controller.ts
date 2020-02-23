@@ -64,6 +64,7 @@ class BlogController {
       )
 
       req.metaDataObject = metaDataObject
+      req.newFileName = newFileName
 
       return next()
     } catch (err) {
@@ -114,12 +115,12 @@ class BlogController {
         htmlContent: string
         metaDataObject: IMarkdownMetaDataObject
       } = req.body
-      const markdownFile = FileDirHelpers.changeFileExtension(
+      const htmlFile = FileDirHelpers.changeFileExtension(
         editedFile,
         '.html',
         '.md'
       )
-      const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
+      const markdownFilePath = path.join(this.markdownDirPath, editedFile)
 
       /** Make sure edit file is exists */
       if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
@@ -138,7 +139,8 @@ class BlogController {
       await HtmlAndMarkdownService.editBlog(
         this.markdownDirPath,
         this.htmlDirPath,
-        markdownFile,
+        editedFile,
+        htmlFile,
         markdownContent,
         htmlContent,
         metaDataObject
@@ -149,6 +151,8 @@ class BlogController {
        * */
       req.oldBlogMetaDataObject = oldBlogMetaDataObject
       req.newBlogMetaDatObject = metaDataObject
+      req.htmlFile = htmlFile
+
       return next()
     } catch (error) {
       return next(error)

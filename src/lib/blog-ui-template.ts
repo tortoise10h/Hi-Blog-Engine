@@ -13,7 +13,7 @@ class BlogUITemplate {
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="x-ua-compatible" content="ie=edge">
-      <title>hi's blog</title>
+      <title>Hi's blog</title>
       <link href="https://fonts.googleapis.com/css?family=open+sans:400,700|space+mono:400,700&display=swap&subset=vietnamese" rel="stylesheet">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
     </head>

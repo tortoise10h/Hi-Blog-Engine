@@ -3,64 +3,66 @@ import path from 'path'
 import util from 'util'
 import httpStatus from 'http-status'
 import moment from 'moment'
+import _ from 'lodash'
 import APIError from '../helpers/api-error'
 import constants from '../common/constants'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import HtmlBlockTemplate from '../helpers/blog-html-element-template'
 import BlogUITemplate from '../lib/blog-ui-template'
-import HtmlAndMarkdownService from '../services/html-markdown.service'
+import { IMarkdownMetaDataObject } from '../services/html-markdown.service'
+import MyArrayHelpers from '../helpers/my-array-helpers'
 
-const writeFileAsync = util.promisify(fs.writeFile)
-
-interface IFileDataToCreateHtmlLinkElement {
+export interface IBlogInfoInIndexConfig {
   title: string
-  htmlFileHref: string
-}
-
-interface IBlogObject {
-  htmlFile: string
   date: Date
-  title: string
   tags: Array<string>
   publishMode: string
+  blogLink: string
+  fileName: string
 }
 
 class BlogIndexService {
-  public async generateIndexHtmlFile(
+  public async generateIndexHtmlFileWithNewBlog(
     blogRootPath: string,
     blogDefaultUrl: string,
     htmlDirPath: string,
-    markdownDirPath: string
+    newFileName: string,
+    newBlogMetaDatObject: IMarkdownMetaDataObject
   ) {
     try {
-      const htmlDirFiles = fs.readdirSync(htmlDirPath)
-      const blogObjectArrWithMetaData: Array<IBlogObject> = this.getBlogObjectArrayWithMetaData(
-        htmlDirFiles,
-        markdownDirPath
+      const indexConfigFilePath: string = path.join(blogRootPath, 'index.json')
+      const indexHtmlFilePath: string = path.join(blogRootPath, 'index.html')
+      let indexConfigObject: any = this.getIndexConfigObject(
+        indexConfigFilePath
+      )
+      const newBlogLink: string = path.join(
+        blogDefaultUrl,
+        constants.HTML_DIR_NAME,
+        `${newFileName}.html`
       )
 
-      let homepageTemplate: string = this.prepareIndexHtmlTemplate(
-        blogObjectArrWithMetaData,
-        markdownDirPath,
-        blogDefaultUrl
+      /** Add new blog info to index config */
+      const newBlogInfo: IBlogInfoInIndexConfig = {
+        title: newBlogMetaDatObject.title,
+        publishMode: newBlogMetaDatObject.publishMode,
+        date: newBlogMetaDatObject.date,
+        tags: newBlogMetaDatObject.tags,
+        blogLink: newBlogLink,
+        fileName: newFileName
+      }
+
+      indexConfigObject.blogs = this.updateBlogArrInIndexConfigCompareToCurrentHtmlDir(
+        indexConfigObject.blogs,
+        newBlogInfo,
+        htmlDirPath
       )
 
-      const indexHtmlPath = path.join(blogRootPath, 'index.html')
+      this.generateNewIndexHtmlFile(indexConfigObject.blogs, indexHtmlFilePath)
 
-      /** Return a promise to each error and controller to use next to handle error prevent app crash */
-      return writeFileAsync(indexHtmlPath, homepageTemplate, {
-        encoding: 'utf-8'
-      }).catch(err => {
-        console.log(
-          '[ERROR] =============> Generate index html file for blog error :> ',
-          err
-        )
-        throw new APIError(
-          httpStatus.BAD_REQUEST,
-          'Generate index html file for blog error',
-          err
-        )
-      })
+      FileDirHelpers.writeFilePromise(
+        indexConfigFilePath,
+        JSON.stringify(indexConfigObject)
+      )
     } catch (error) {
       throw new APIError(
         httpStatus.BAD_REQUEST,
@@ -70,130 +72,185 @@ class BlogIndexService {
     }
   }
 
-  public getBlogObjectArrayWithMetaData(
-    htmlFiles: Array<string>,
-    markdownDirPath: string
-  ): Array<IBlogObject> {
-    const blogObjectArrWithMetaData: Array<IBlogObject> = htmlFiles.map(
-      htmlFile => {
-        const markdownFileName = FileDirHelpers.changeFileExtension(
-          htmlFile,
-          '.html',
-          '.md'
-        )
-        const metaDataObject = HtmlAndMarkdownService.getMarkdownMetaData(
-          path.join(markdownDirPath, markdownFileName)
-        )
-
-        return {
-          htmlFile,
-          ...metaDataObject
-        }
+  public getIndexConfigObject(indexConfigFilePath: string) {
+    try {
+      let indexConfigObject: any = {
+        blogs: []
       }
-    )
+      if (FileDirHelpers.isFileExisted(indexConfigFilePath)) {
+        /** If index config file is already existed then read it and replace default index config object */
+        const indexConfigContent: string = fs.readFileSync(
+          indexConfigFilePath,
+          { encoding: 'utf-8' }
+        )
+        indexConfigObject = JSON.parse(indexConfigContent)
+      }
 
-    return blogObjectArrWithMetaData
+      return indexConfigObject
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
+  }
+
+  public updateBlogArrInIndexConfigCompareToCurrentHtmlDir(
+    blogInfoArr: Array<IBlogInfoInIndexConfig>,
+    newBlogInfo: IBlogInfoInIndexConfig,
+    htmlDirPath: string
+  ): Array<IBlogInfoInIndexConfig> {
+    try {
+      blogInfoArr.push(newBlogInfo)
+
+      const deletedFiles: Array<string> = this.getAllRedundantHtmlFilesInIndexConfig(
+        htmlDirPath,
+        blogInfoArr
+      )
+
+      /** Remove all redundant files in index config */
+      blogInfoArr = blogInfoArr.filter(
+        (blog: IBlogInfoInIndexConfig) =>
+          !deletedFiles.includes(`${blog.fileName}.html`)
+      )
+
+      return blogInfoArr
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
+  }
+
+  public getAllRedundantHtmlFilesInIndexConfig(
+    htmlDirPath: string,
+    blogInfoArr: Array<IBlogInfoInIndexConfig>
+  ) {
+    try {
+      const htmlDirFiles: Array<string> = fs.readdirSync(htmlDirPath)
+
+      // Get all html files in index blog
+      const htmlFilesInIndexConfig: Array<string> = blogInfoArr.map(
+        (blog: IBlogInfoInIndexConfig) => blog.fileName
+      )
+
+      // get all html files exist in index config but not exist in html dir
+      const deletedFiles: Array<string> = _.difference(
+        htmlFilesInIndexConfig,
+        htmlDirFiles
+      )
+
+      return deletedFiles
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
   }
 
   public prepareIndexHtmlTemplate(
-    blogObjectArrWithMetaData: Array<IBlogObject>,
-    markdownDirPath: string,
-    blogDefaultUrl: string
+    blogInfoArray: Array<IBlogInfoInIndexConfig>
   ): string {
     let homepageTemplate: string = BlogUITemplate.getHomepageTemplate()
 
-    /** Make html link tag for all file in html directory */
-    const tableOfContentData = this.createHtmlLinkElementForEachFile(
-      blogObjectArrWithMetaData,
-      markdownDirPath,
-      blogDefaultUrl
-    )
+    const tableOfContentData = this.createIndexHtmlTableContent(blogInfoArray)
 
     /** Put table of content data to template file */
-    homepageTemplate = homepageTemplate.replace(
-      /\B{{tableContent}}\B/g,
-      tableOfContentData
-    )
+    homepageTemplate = BlogUITemplate.addContentsToTemplate(homepageTemplate, [
+      {
+        template_sign: '{{tableContent}}',
+        content: tableOfContentData
+      }
+    ])
 
     return homepageTemplate
   }
 
-  public createHtmlLinkElementForEachFile(
-    blogObjectArrWithMetaData: Array<IBlogObject>,
-    markdownDirPath: string,
-    blogDefaultUrl: string
+  public createIndexHtmlTableContent(
+    blogInfoArray: Array<IBlogInfoInIndexConfig>
   ): string {
     let result = ''
 
-    const blogArr: Array<IBlogObject> = this.sortBlogArrByDateAscending(
-      blogObjectArrWithMetaData
+    /** Make sure blog order ascending */
+    const ascendingBlogInfoArr: Array<IBlogInfoInIndexConfig> = this.sortBlogArrByDateAscending(
+      blogInfoArray
     )
 
-    blogArr.forEach((blogObject: IBlogObject) => {
-      const {
-        htmlFileHref,
-        title
-      }: IFileDataToCreateHtmlLinkElement = this.preapreFileDataToCreateHtmlLinkElement(
-        blogDefaultUrl,
-        blogObject,
-        markdownDirPath
+    ascendingBlogInfoArr.forEach((blogInfoObject: IBlogInfoInIndexConfig) => {
+      const blogLinkElement = HtmlBlockTemplate.createHomePageBlogLink(
+        blogInfoObject.blogLink,
+        blogInfoObject.title
       )
 
-      /** Create link element */
-      const htmlLinkTag = HtmlBlockTemplate.createHomePageBlogLink(
-        htmlFileHref,
-        title
-      )
-      result += htmlLinkTag
+      result += blogLinkElement
     })
 
     return result
   }
 
-  public preapreFileDataToCreateHtmlLinkElement(
-    blogDefaultUrl: string,
-    blogObject: IBlogObject,
-    markdownDirPath: string
-  ): IFileDataToCreateHtmlLinkElement {
-    /** Href link to put to <a> tag */
-    const htmlFileHref = path.join(
-      blogDefaultUrl,
-      constants.HTML_DIR_NAME,
-      blogObject.htmlFile
-    )
-
-    /** Get meta data from markdown file to create detail of link */
-    const markdownFile = FileDirHelpers.changeFileExtension(
-      blogObject.htmlFile,
-      '.html',
-      '.md'
-    )
-    const { title } = HtmlAndMarkdownService.getMarkdownMetaData(
-      path.join(markdownDirPath, markdownFile)
-    )
-
-    return {
-      title,
-      htmlFileHref
-    }
-  }
-
   public sortBlogArrByDateAscending(
-    blogObjectArrWithMetaData: Array<IBlogObject>
-  ): Array<IBlogObject> {
-    const result = blogObjectArrWithMetaData.sort(
-      (a: IBlogObject, b: IBlogObject) => {
-        if (moment(a.date).isAfter(moment(b.date))) {
-          return 1
-        } else if (moment(a.date).isBefore(moment(b.date))) {
-          return -1
-        } else {
-          return 0
-        }
+    blogInfoArray: Array<IBlogInfoInIndexConfig>
+  ): Array<IBlogInfoInIndexConfig> {
+    const result = blogInfoArray.sort(
+      (a: IBlogInfoInIndexConfig, b: IBlogInfoInIndexConfig) => {
+        return MyArrayHelpers.compareDateInSortByDateAsc(a.date, b.date)
       }
     )
 
     return result
+  }
+
+  public generateNewIndexHtmlFile(
+    blogInfoArr: Array<IBlogInfoInIndexConfig>,
+    indexHtmlFilePath: string
+  ) {
+    try {
+      const homePageHtmlContent: string = this.prepareIndexHtmlTemplate(
+        blogInfoArr
+      )
+
+      FileDirHelpers.writeFilePromise(indexHtmlFilePath, homePageHtmlContent)
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
+  }
+
+  public async updateBlogInfoInIndexConfigFile(
+    blogInfoObject: IBlogInfoInIndexConfig,
+    blogRootPath: string
+  ) {
+    try {
+      const indexConfigFilePath: string = path.join(blogRootPath, 'index.json')
+      const indexConfigContent: string = fs.readFileSync(indexConfigFilePath, {
+        encoding: 'utf-8'
+      })
+      const indexConfigObject: any = JSON.parse(indexConfigContent)
+
+      /** Update new info for chosen blog */
+      indexConfigObject.blogs = this.updateBlogInBlogArrOfIndexConfig(
+        indexConfigObject.blogs,
+        blogInfoObject
+      )
+
+      await FileDirHelpers.writeFilePromise(
+        indexConfigFilePath,
+        JSON.stringify(indexConfigObject)
+      )
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
+  }
+
+  public updateBlogInBlogArrOfIndexConfig(
+    blogInfoArray: Array<IBlogInfoInIndexConfig>,
+    blogInfoObject: IBlogInfoInIndexConfig
+  ): Array<IBlogInfoInIndexConfig> {
+    try {
+      const updatePosition: number = blogInfoArray.findIndex(
+        val => val.blogLink === blogInfoObject.blogLink
+      )
+
+      blogInfoArray[updatePosition] = {
+        ...blogInfoObject
+      }
+
+      return blogInfoArray
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
   }
 }
 

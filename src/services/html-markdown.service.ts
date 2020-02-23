@@ -275,18 +275,13 @@ class HtmlMarkdownService {
     markdownDirPath: string,
     htmlDirPath: string,
     markdownFile: string,
+    htmlFile: string,
     markdownContent: string,
     htmlContent: string,
     metaDataObject: IMarkdownMetaDataObject
   ): Promise<any> {
     try {
       const { date, tags, title, publishMode } = metaDataObject
-
-      const htmlFile = FileDirHelpers.changeFileExtension(
-        markdownFile,
-        '.md',
-        '.html'
-      )
 
       const markdownFilePath: string = path.join(markdownDirPath, markdownFile)
       const htmlFilePath: string = path.join(htmlDirPath, htmlFile)

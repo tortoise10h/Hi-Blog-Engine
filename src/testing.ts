@@ -8,15 +8,30 @@ import BlogHtmlElementTemplate from './helpers/blog-html-element-template'
 import BlogUITemplate from './lib/blog-ui-template'
 import TagService from './services/tag.service'
 
-TagService.writeNewBlogConfigInfoToStableTagsProcess(
-  ['blog'],
-  'file:/D:/Hi-Blogs/html/yesterday-blog.html',
-  {
-    date: new Date(),
-    title: 'The title ever',
-    tags: ['blog', 'talk'],
-    publishMode: 'publish'
-  },
-  '/mnt/d/Hi-Blogs/tag',
-  'yesterday-blog.html'
-)
+const writeFileAsync = util.promisify(fs.writeFile)
+
+const filePath = '/mnt/d/Hi-Blogs/test.txt'
+
+const writeOne = (filePath: string) => {
+  return FileDirHelpers.writeFile(filePath, 'huy')
+}
+
+const writeTwo = (filePath: string) => {
+  return new Promise(resolve => {
+    writeFileAsync(filePath, 'huy', { encoding: 'utf-8' })
+      .then(() => {
+        console.log('ok')
+        resolve('ok')
+      })
+      .catch(err => {
+        throw new Error(err)
+      })
+  })
+}
+
+const run = async () => {
+  await Promise.resolve(writeTwo(filePath))
+  console.log('huy')
+}
+
+run()

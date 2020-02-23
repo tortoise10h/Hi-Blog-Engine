@@ -6,6 +6,7 @@ import _ from 'lodash'
 import APIError from '../helpers/api-error'
 
 const mkdirAsync = util.promisify(fs.mkdir)
+const writeFileAsync = util.promisify(fs.writeFile)
 
 interface ValidBlogDirectoryCheckerReturn {
   isOk: boolean
@@ -115,6 +116,20 @@ class FileDirHelpers {
     })
 
     return arrFile
+  }
+
+  public writeFilePromise(filePath: string, data: string): Promise<any> {
+    try {
+      return new Promise(resolve => {
+        writeFileAsync(filePath, data, { encoding: 'utf-8' })
+          .then(() => resolve({ isOk: 'ok' }))
+          .catch(err => {
+            throw new APIError(httpStatus.BAD_REQUEST, '', err)
+          })
+      })
+    } catch (error) {
+      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
   }
 }
 
