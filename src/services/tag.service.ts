@@ -9,9 +9,8 @@ import APIError from '../helpers/api-error'
 import BlogHtmlElementTemplate from '../helpers/blog-html-element-template'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import MyArrayHelpers from '../helpers/my-array-helpers'
+import MyCustomHelpers from '../helpers/my-custom-helpers'
 import constants from '../common/constants'
-
-const writeFileAsync = util.promisify(fs.writeFile)
 
 interface IBlogConfigInTag {
   date: Date
@@ -27,7 +26,7 @@ interface ITagTypeOfBlogEdit {
 }
 
 class TagService {
-  public saveBlogLinkToTagFile(
+  public saveNewBlogLinkToTags(
     blogDefaultUrl: string,
     tagDirPath: string,
     htmlFileName: string,
@@ -41,10 +40,7 @@ class TagService {
         htmlFileName
       )
 
-      /** Check tag directory exists or not (then create one) */
-      FileDirHelpers.createDirIfNotExistsOfGivenPath(tagDirPath)
-
-      return this.writeTagFileProcess(
+      return this.writeNewBlogLinkToTagsProcess(
         tags,
         tagDirPath,
         blogLink,
@@ -53,11 +49,11 @@ class TagService {
         publishMode
       )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
-  public writeTagFileProcess(
+  public writeNewBlogLinkToTagsProcess(
     tags: Array<string>,
     tagDirPath: string,
     blogLink: string,
@@ -71,9 +67,17 @@ class TagService {
        * If tag is exists then append new blog link
        * */
       const writeLinkToTagFileProcess = tags.map(tag => {
-        const tagFilePath = path.join(tagDirPath, `${tag}.html`)
-        const tagJSONConfigPath = path.join(tagDirPath, `${tag}.json`)
-        let tagData: string = this.prepareContentForTagFile(
+        const tagFilePath = path.join(
+          tagDirPath,
+          constants.TAG_HTML_DIR_NAME,
+          `${tag}.html`
+        )
+        const tagJSONConfigPath = path.join(
+          tagDirPath,
+          constants.TAG_CONFIG_DIR_NAME,
+          `${tag}.json`
+        )
+        let tagData: string = this.prepareContentForWriteNewBlogLinkToTags(
           tagFilePath,
           tagDirPath,
           tag,
@@ -83,51 +87,21 @@ class TagService {
           publishMode
         )
 
-        this.checkAndWriteTagConfigFileDown(
-          title,
-          blogLink,
-          date,
-          publishMode,
-          tagJSONConfigPath
-        )
-
-        this.writeTagFile(tagFilePath, tagData)
+        return Promise.all([
+          FileDirHelpers.writeFilePromise(tagFilePath, tagData),
+          this.checkAndWriteTagConfigFileDown(
+            title,
+            blogLink,
+            date,
+            publishMode,
+            tagJSONConfigPath
+          )
+        ])
       })
 
       return Promise.all(writeLinkToTagFileProcess)
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
-    }
-  }
-
-  public writeTagFile(tagFilePath: string, tagData: string) {
-    try {
-      writeFileAsync(tagFilePath, tagData, {
-        encoding: 'utf-8'
-      }).catch(err => {
-        throw new APIError(httpStatus.BAD_REQUEST, 'Write tag file error', err)
-      })
-    } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
-    }
-  }
-
-  public writeTagConfigFile(
-    tagConfigContent: string,
-    tagJSONConfigPath: string
-  ): void {
-    try {
-      writeFileAsync(tagJSONConfigPath, tagConfigContent, {
-        encoding: 'utf-8'
-      }).catch(error => {
-        throw new APIError(
-          httpStatus.BAD_REQUEST,
-          `Write new tag json config error`,
-          error
-        )
-      })
-    } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -137,7 +111,7 @@ class TagService {
     date: Date,
     publishMode: string,
     tagJSONConfigPath: string
-  ) {
+  ): Promise<any> {
     try {
       if (!fs.existsSync(tagJSONConfigPath)) {
         /** If file does not exist then create new one */
@@ -152,31 +126,30 @@ class TagService {
           ]
         }
 
-        this.writeTagConfigFile(
-          JSON.stringify(tagConfigObject),
-          tagJSONConfigPath
-        )
-      } else {
-        this.appendNewBlogConfigToTagConfigFile(
-          title,
-          date,
-          blogLink,
-          publishMode,
-          tagJSONConfigPath
+        return FileDirHelpers.writeFilePromise(
+          tagJSONConfigPath,
+          JSON.stringify(tagConfigObject)
         )
       }
+      return this.addNewBlogInfoToTagConfigFile(
+        title,
+        date,
+        blogLink,
+        publishMode,
+        tagJSONConfigPath
+      )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
-  public appendNewBlogConfigToTagConfigFile(
+  public addNewBlogInfoToTagConfigFile(
     title: string,
     date: Date,
     blogLink: string,
     publishMode: string,
     tagJSONConfigPath: string
-  ) {
+  ): Promise<any> {
     try {
       const configContent: string = fs.readFileSync(tagJSONConfigPath, {
         encoding: 'utf-8'
@@ -189,21 +162,16 @@ class TagService {
         blogLink
       })
 
-      writeFileAsync(tagJSONConfigPath, JSON.stringify(configObject), {
-        encoding: 'utf-8'
-      }).catch(err => {
-        throw new APIError(
-          httpStatus.BAD_REQUEST,
-          'Write config file error',
-          err
-        )
-      })
+      return FileDirHelpers.writeFilePromise(
+        tagJSONConfigPath,
+        JSON.stringify(configObject)
+      )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
-  public prepareContentForTagFile(
+  public prepareContentForWriteNewBlogLinkToTags(
     tagFilePath: string,
     tagDirPath: string,
     tag: string,
@@ -216,7 +184,7 @@ class TagService {
       let tagData: string
       if (!fs.existsSync(tagFilePath)) {
         /** If tag file is not exists */
-        const newTagFileContent: string = this.createNewTagFileHtmlTemplate(
+        const newTagFileContent: string = this.createHtmlContentForNewTag(
           blogLink,
           title,
           tag
@@ -224,7 +192,7 @@ class TagService {
         tagData = newTagFileContent
       } else {
         /** If tag file is already existed */
-        tagData = this.createHtmlTemplateForExistedTagFile(
+        tagData = this.createHtmlContentForExistedTagFile(
           tagDirPath,
           tag,
           blogLink,
@@ -236,11 +204,100 @@ class TagService {
 
       return tagData
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
-  public createNewTagFileHtmlTemplate(
+  public updateAllCurrentTagsInEachTagFile(
+    tagDirPath: string,
+    blogDefaultUrl: string
+  ): Promise<any> {
+    try {
+      const tagHtmlFiles: Array<string> = fs.readdirSync(
+        path.join(tagDirPath, constants.TAG_HTML_DIR_NAME)
+      )
+      const tagsName: Array<string> = tagHtmlFiles.map((tagFile: string) => {
+        return FileDirHelpers.changeFileExtension(tagFile, '.html', '')
+      })
+      const tagsHtmlPath: Array<string> = tagHtmlFiles.map(tagFile =>
+        path.join(tagDirPath, constants.TAG_HTML_DIR_NAME, tagFile)
+      )
+      const tagsUrl: Array<string> = tagHtmlFiles.map(tagFile =>
+        path.join(blogDefaultUrl, constants.TAG_HTML_DIR_NAME, tagFile)
+      )
+      const tagsConfigPath: Array<string> = tagHtmlFiles.map(tagFile => {
+        const tagConfigFile = FileDirHelpers.changeFileExtension(
+          tagFile,
+          '.html',
+          '.json'
+        )
+        return path.join(
+          tagDirPath,
+          constants.TAG_CONFIG_DIR_NAME,
+          tagConfigFile
+        )
+      })
+
+      const allCurrentTagsHtml: string = this.createAllCurrentTagsHtml(
+        tagHtmlFiles,
+        tagsName,
+        tagsUrl
+      )
+
+      /** Generate new html content for all tags include all current tags */
+      const tagsInfo = tagsConfigPath.map(
+        (configPath: string, index: number) => {
+          const tagConfigObject = this.getTagFileConfigObject(configPath)
+          let tagNewHtmlData = this.createTagHtmlFileData(
+            tagConfigObject.blogs,
+            tagsName[index]
+          )
+
+          /** Append all current tag to each tag new html data */
+          tagNewHtmlData = BlogUITemplate.addContentsToTemplate(
+            tagNewHtmlData,
+            [
+              {
+                template_sign: '{{otherTags}}',
+                content: allCurrentTagsHtml
+              }
+            ]
+          )
+
+          return {
+            tagNewHtmlData,
+            tagFilePath: tagsHtmlPath[index]
+          }
+        }
+      )
+
+      const updateProcess = tagsInfo.map((info: any) =>
+        FileDirHelpers.writeFilePromise(info.tagFilePath, info.tagNewHtmlData)
+      )
+
+      return Promise.all(updateProcess)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public createAllCurrentTagsHtml(
+    tagHtmlFiles: Array<string>,
+    tagHtmlFilesName: Array<string>,
+    tagsUrl: Array<string>
+  ): string {
+    let result = ''
+    for (let i = 0; i < tagHtmlFiles.length; i++) {
+      result += BlogHtmlElementTemplate.createOtherTagLink(
+        tagHtmlFilesName[i],
+        tagsUrl[i]
+      )
+    }
+
+    return result
+  }
+
+  public createHtmlContentForNewTag(
     blogLink: string,
     title: string,
     tag: string
@@ -268,11 +325,11 @@ class TagService {
 
       return newTagFileContent
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
-  public createHtmlTemplateForExistedTagFile(
+  public createHtmlContentForExistedTagFile(
     tagDirPath: string,
     tag: string,
     blogLink: string,
@@ -282,7 +339,11 @@ class TagService {
   ): string {
     try {
       /** Read data of existed tag file */
-      const tagJSONFilePath: string = path.join(tagDirPath, `${tag}.json`)
+      const tagJSONFilePath: string = path.join(
+        tagDirPath,
+        constants.TAG_CONFIG_DIR_NAME,
+        `${tag}.json`
+      )
       const tagJSONObject = this.getTagFileConfigObject(tagJSONFilePath)
 
       const blogConfigInTag: IBlogConfigInTag = {
@@ -305,7 +366,7 @@ class TagService {
 
       return tagFileTemplate
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -353,11 +414,12 @@ class TagService {
       const tagJSONContent: string = fs.readFileSync(tagConfigFilePath, {
         encoding: 'utf-8'
       })
+
       const tagJSONObject = JSON.parse(tagJSONContent)
 
       return tagJSONObject
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -391,7 +453,7 @@ class TagService {
     return blogTagsArray
   }
 
-  public handleTagOfBlogEdit(
+  public handleTagsOfBlogAfterEditBlog(
     newMetadataObject: IMarkdownMetaDataObject,
     oldMetaDataObject: IMarkdownMetaDataObject,
     blogLink: string,
@@ -418,14 +480,14 @@ class TagService {
         tagDirPath,
         htmlFile
       )
-      this.writeNewBlogConfigInfoToStableTagsProcess(
+      this.updateBlogInfoInStableTagsConfigProcess(
         stableTags,
         blogLink,
         newMetadataObject,
         tagDirPath
       )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -446,7 +508,7 @@ class TagService {
     }
   }
 
-  public writeNewBlogConfigInfoToStableTagsProcess(
+  public updateBlogInfoInStableTagsConfigProcess(
     stableTags: Array<string>,
     blogLink: string,
     newMetadataObject: IMarkdownMetaDataObject,
@@ -454,12 +516,20 @@ class TagService {
   ): Promise<any> {
     try {
       const writeProcess = stableTags.map(tag => {
-        const tagFilePath = path.join(tagDirPath, `${tag}.html`)
-        const tagConfigFilePath = path.join(tagDirPath, `${tag}.json`)
+        const tagFilePath = path.join(
+          tagDirPath,
+          constants.TAG_HTML_DIR_NAME,
+          `${tag}.html`
+        )
+        const tagConfigFilePath = path.join(
+          tagDirPath,
+          constants.TAG_CONFIG_DIR_NAME,
+          `${tag}.json`
+        )
         let tagJSONObject = this.getTagFileConfigObject(tagConfigFilePath)
 
         /** Update config info for edited blog */
-        tagJSONObject = this.updateConfigInfoForEditedBlog(
+        tagJSONObject = this.updateBlogInfoOfEditedBlog(
           tagJSONObject,
           blogLink,
           newMetadataObject
@@ -472,20 +542,22 @@ class TagService {
         )
 
         /** Save html & config content */
-        this.writeTagFile(tagFilePath, tagHtmlFileData)
-        this.writeTagConfigFile(
-          JSON.stringify(tagJSONObject),
-          tagConfigFilePath
-        )
+        return Promise.all([
+          FileDirHelpers.writeFilePromise(tagFilePath, tagHtmlFileData),
+          FileDirHelpers.writeFilePromise(
+            tagConfigFilePath,
+            JSON.stringify(tagJSONObject)
+          )
+        ])
       })
 
       return Promise.all(writeProcess)
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
-  public updateConfigInfoForEditedBlog(
+  public updateBlogInfoOfEditedBlog(
     tagJSONObject: any,
     blogLink: string,
     newMetadataObject: IMarkdownMetaDataObject
@@ -523,14 +595,14 @@ class TagService {
       const metaDatObject = _.clone(newMetadataObject)
       metaDatObject.tags = blogNewTags
 
-      return this.saveBlogLinkToTagFile(
+      return this.saveNewBlogLinkToTags(
         blogDefaultUrl,
         tagDirPath,
         htmlFileName,
         metaDatObject
       )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -546,7 +618,7 @@ class TagService {
 
       return Promise.all(removeProcess)
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -556,8 +628,16 @@ class TagService {
     blogLink: string
   ): Promise<any> {
     try {
-      const tagFilePath = path.join(tagDirPath, `${tag}.html`)
-      const tagConfigFilePath = path.join(tagDirPath, `${tag}.json`)
+      const tagFilePath = path.join(
+        tagDirPath,
+        constants.TAG_HTML_DIR_NAME,
+        `${tag}.html`
+      )
+      const tagConfigFilePath = path.join(
+        tagDirPath,
+        constants.TAG_CONFIG_DIR_NAME,
+        `${tag}.json`
+      )
 
       const tagJSONObject = this.getTagFileConfigObject(tagConfigFilePath)
 
@@ -579,7 +659,7 @@ class TagService {
         FileDirHelpers.writeFilePromise(tagFilePath, tagHtmlFileData)
       ])
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -596,7 +676,7 @@ class TagService {
         1
       )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -612,11 +692,7 @@ class TagService {
         tagDirPath
       )
     } catch (error) {
-      throw new APIError(
-        httpStatus.BAD_REQUEST,
-        'Remove deleted blog link from tags error',
-        error
-      )
+      throw error
     }
   }
 }

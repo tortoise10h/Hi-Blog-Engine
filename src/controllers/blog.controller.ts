@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import httpStatus from 'http-status'
 import path from 'path'
-import util from 'util'
 import moment from 'moment'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import HtmlAndMarkdownService, {

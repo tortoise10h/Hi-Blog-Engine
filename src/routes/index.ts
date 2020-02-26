@@ -15,7 +15,9 @@ const {
   blogDefaultUrl,
   markdownDirPath,
   htmlDirPath,
-  tagDirPath
+  tagDirPath,
+  tagConfigDirPath,
+  tagHtmlDirPath
 } = Config.getEnviromentVariables()
 
 /** Initialize controller instances */
@@ -31,9 +33,10 @@ const blogDirectoryController = new BlogDirectoryController(
   htmlDirPath
 )
 const tagController = new TagController(
-  blogRootPath,
   blogDefaultUrl,
-  tagDirPath
+  tagDirPath,
+  tagConfigDirPath,
+  tagHtmlDirPath
 )
 
 /** Home page - Writing blog page */
@@ -73,6 +76,9 @@ router
       tagController.handleTagsOfBlogEdit(req, res, next)
     },
     (req: any, res: Response, next: NextFunction) => {
+      tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
       blogDirectoryController.updateIndexHtmlAfterUpdateBlog(req, res, next)
     }
   )
@@ -83,6 +89,9 @@ router
     },
     (req: any, res: Response, next: NextFunction) => {
       tagController.removeDeletedBlogLinkFromTag(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
     },
     (req: any, res: Response, next: NextFunction) => {
       blogDirectoryController.removeDeletedBlogLinkFromIndexFile(req, res, next)
@@ -96,6 +105,9 @@ router.route('/blogs').post(
   },
   (req: any, res: Response, next: NextFunction) => {
     tagController.saveFileToTag(req, res, next)
+  },
+  (req: any, res: Response, next: NextFunction) => {
+    tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
   },
   (req: any, res: Response, next: NextFunction) => {
     blogDirectoryController.checkAndCreateMissingFileInHtmlDir(req, res, next)

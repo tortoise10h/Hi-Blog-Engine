@@ -10,17 +10,9 @@ import TagService from './services/tag.service'
 
 const writeFileAsync = util.promisify(fs.writeFile)
 
-const filePath = '/mnt/d/Hi-Blogs/test.txt'
+const blogDefaultUrl = 'file:/D:/Hi-blogs'
 
-const metaDataObject = {
-  data: new Date(),
-  tags: ['tag1', 'tag2'],
-  publishMode: 'publish',
-  title: 'this is a title'
-}
-
-const a = _.clone(metaDataObject)
-const b = _.cloneDeep(metaDataObject)
-
-console.log(`=========> a: ${util.inspect(a, false, null, true)}`)
-console.log(`=========> b: ${util.inspect(b, false, null, true)}`)
+TagService.updateAllCurrentTagsInEachTagFile(
+  '/mnt/d/Hi-Blogs/tag',
+  'file:/D:/Hi-blogs'
+)
