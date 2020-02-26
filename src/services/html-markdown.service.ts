@@ -342,6 +342,24 @@ class HtmlMarkdownService {
       throw new APIError(httpStatus.BAD_REQUEST, '', error)
     }
   }
+
+  public deteleHtmlAndMarkdownFile(
+    htmlFilePath: string,
+    markdownFilePath: string
+  ) {
+    try {
+      fs.unlinkSync(markdownFilePath)
+      if (FileDirHelpers.isFileExisted(htmlFilePath)) {
+        fs.unlinkSync(htmlFilePath)
+      }
+    } catch (error) {
+      throw new APIError(
+        httpStatus.BAD_REQUEST,
+        'Delete html and markdown file error',
+        error
+      )
+    }
+  }
 }
 
 export default new HtmlMarkdownService()

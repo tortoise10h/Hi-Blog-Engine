@@ -1,8 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import util from 'util'
 import httpStatus from 'http-status'
-import moment from 'moment'
 import _ from 'lodash'
 import APIError from '../helpers/api-error'
 import constants from '../common/constants'
@@ -196,13 +194,16 @@ class BlogIndexService {
   public generateNewIndexHtmlFile(
     blogInfoArr: Array<IBlogInfoInIndexConfig>,
     indexHtmlFilePath: string
-  ) {
+  ): Promise<any> {
     try {
       const homePageHtmlContent: string = this.prepareIndexHtmlTemplate(
         blogInfoArr
       )
 
-      FileDirHelpers.writeFilePromise(indexHtmlFilePath, homePageHtmlContent)
+      return FileDirHelpers.writeFilePromise(
+        indexHtmlFilePath,
+        homePageHtmlContent
+      )
     } catch (error) {
       throw new APIError(httpStatus.BAD_REQUEST, '', error)
     }
@@ -251,6 +252,49 @@ class BlogIndexService {
     } catch (error) {
       throw new APIError(httpStatus.BAD_REQUEST, '', error)
     }
+  }
+
+  public removeBlogLinkFromIndexFile(
+    blogLink: string,
+    indexConfigFilePath: string,
+    indexHtmlFilePath: string
+  ): Promise<any> {
+    try {
+      const indexConfigObject = this.getIndexConfigObject(indexConfigFilePath)
+      /** Remove link from config object */
+      indexConfigObject.blogs = this.removeGivenBlogLinkFromBlogInfoArray(
+        indexConfigObject.blogs,
+        blogLink
+      )
+
+      return Promise.all([
+        this.generateNewIndexHtmlFile(
+          indexConfigObject.blogs,
+          indexHtmlFilePath
+        ),
+        FileDirHelpers.writeFilePromise(
+          indexConfigFilePath,
+          JSON.stringify(indexConfigObject)
+        )
+      ])
+    } catch (error) {
+      throw new APIError(
+        httpStatus.BAD_REQUEST,
+        'Remove blog link from index error',
+        error
+      )
+    }
+  }
+
+  public removeGivenBlogLinkFromBlogInfoArray(
+    blogInfoArr: Array<IBlogInfoInIndexConfig>,
+    blogLink: string
+  ): Array<IBlogInfoInIndexConfig> {
+    const result = blogInfoArr.filter(
+      (blog: IBlogInfoInIndexConfig) => blog.blogLink !== blogLink
+    )
+
+    return result
   }
 }
 

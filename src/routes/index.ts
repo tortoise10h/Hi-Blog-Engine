@@ -53,9 +53,9 @@ router.route('/').get(
   }
 )
 
-/** Show edit page */
 router
-  .route('/blog-edit/:editedFile')
+  .route('/blog-edit/:markdownFile')
+  /** Render edit blog page */
   .get(
     (req: any, res: Response, next: NextFunction) => {
       blogDirectoryController.getAllMarkdownFiles(req, res, next)
@@ -64,6 +64,7 @@ router
       blogController.renderEditorPage(req, res, next)
     }
   )
+  /** Edit blog api */
   .put(
     (req: any, res: Response, next: NextFunction) => {
       blogController.editBlog(req, res, next)
@@ -73,6 +74,18 @@ router
     },
     (req: any, res: Response, next: NextFunction) => {
       blogDirectoryController.updateIndexHtmlAfterUpdateBlog(req, res, next)
+    }
+  )
+  /** Delete blog api */
+  .delete(
+    (req: any, res: Response, next: NextFunction) => {
+      blogController.deleteBlog(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      tagController.removeDeletedBlogLinkFromTag(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      blogDirectoryController.removeDeletedBlogLinkFromIndexFile(req, res, next)
     }
   )
 

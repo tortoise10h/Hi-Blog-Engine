@@ -12,26 +12,15 @@ const writeFileAsync = util.promisify(fs.writeFile)
 
 const filePath = '/mnt/d/Hi-Blogs/test.txt'
 
-const writeOne = (filePath: string) => {
-  return FileDirHelpers.writeFile(filePath, 'huy')
+const metaDataObject = {
+  data: new Date(),
+  tags: ['tag1', 'tag2'],
+  publishMode: 'publish',
+  title: 'this is a title'
 }
 
-const writeTwo = (filePath: string) => {
-  return new Promise(resolve => {
-    writeFileAsync(filePath, 'huy', { encoding: 'utf-8' })
-      .then(() => {
-        console.log('ok')
-        resolve('ok')
-      })
-      .catch(err => {
-        throw new Error(err)
-      })
-  })
-}
+const a = _.clone(metaDataObject)
+const b = _.cloneDeep(metaDataObject)
 
-const run = async () => {
-  await Promise.resolve(writeTwo(filePath))
-  console.log('huy')
-}
-
-run()
+console.log(`=========> a: ${util.inspect(a, false, null, true)}`)
+console.log(`=========> b: ${util.inspect(b, false, null, true)}`)
