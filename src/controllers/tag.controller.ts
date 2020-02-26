@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express'
 import path from 'path'
+import util from 'util'
 import TagService from '../services/tag.service'
 import FileDirHelpers from '../helpers/file-dir-helpers'
+import { IMarkdownMetaDataObject } from '../services/html-markdown.service'
 import constants from '../common/constants'
 import APIResponse from '../helpers/api-response'
 
@@ -44,10 +46,10 @@ class TagController {
     next: NextFunction
   ) {
     try {
-      const { editedFile } = req.params
+      const { markdownFile } = req.params
       const { newBlogMetaDatObject, oldBlogMetaDataObject } = req
       const htmlFile = FileDirHelpers.changeFileExtension(
-        editedFile,
+        markdownFile,
         '.md',
         '.html'
       )
@@ -65,6 +67,40 @@ class TagController {
         this.blogDefaultUrl,
         htmlFile
       )
+      return next()
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  public async removeDeletedBlogLinkFromTag(
+    req: any,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const {
+        metaDataObject,
+        markdownFile
+      }: { metaDataObject: IMarkdownMetaDataObject; markdownFile: string } = req
+      const htmlFile = FileDirHelpers.changeFileExtension(
+        markdownFile,
+        '.md',
+        '.html'
+      )
+      const blogLink = path.join(
+        this.blogDefaultUrl,
+        constants.HTML_DIR_NAME,
+        htmlFile
+      )
+
+      await TagService.removeDeletedBlogLinkFromTags(
+        metaDataObject.tags,
+        this.tagDirPath,
+        blogLink
+      )
+
+      req.blogLink = blogLink
 
       return next()
     } catch (error) {

@@ -1,12 +1,14 @@
 import { Request, Response, NextFunction } from 'express'
 import httpStatus from 'http-status'
 import path from 'path'
+import util from 'util'
 import moment from 'moment'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import HtmlAndMarkdownService, {
   IMarkdownMetaDataObject
 } from '../services/html-markdown.service'
 import APIError from '../helpers/api-error'
+import MyCustomHelpers from '../helpers/my-custom-helpers'
 import APIResponse from '../helpers/api-response'
 import constants from '../common/constants'
 
@@ -74,10 +76,10 @@ class BlogController {
 
   public renderEditorPage(req: any, res: Response, next: NextFunction) {
     try {
-      const { editedFile } = req.params
+      const { markdownFile } = req.params
       const { rootDir } = req
       console.log(`this: ${this}`)
-      const markdownFilePath = path.join(this.markdownDirPath, editedFile)
+      const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
 
       const {
         metaDataObject,
@@ -105,7 +107,7 @@ class BlogController {
 
   public async editBlog(req: any, res: Response, next: NextFunction) {
     try {
-      const { editedFile }: { editedFile: string } = req.params
+      const { markdownFile }: { markdownFile: string } = req.params
       const {
         markdownContent,
         htmlContent,
@@ -116,11 +118,11 @@ class BlogController {
         metaDataObject: IMarkdownMetaDataObject
       } = req.body
       const htmlFile = FileDirHelpers.changeFileExtension(
-        editedFile,
-        '.html',
-        '.md'
+        markdownFile,
+        '.md',
+        '.html'
       )
-      const markdownFilePath = path.join(this.markdownDirPath, editedFile)
+      const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
 
       /** Make sure edit file is exists */
       if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
@@ -139,7 +141,7 @@ class BlogController {
       await HtmlAndMarkdownService.editBlog(
         this.markdownDirPath,
         this.htmlDirPath,
-        editedFile,
+        markdownFile,
         htmlFile,
         markdownContent,
         htmlContent,
@@ -152,6 +154,49 @@ class BlogController {
       req.oldBlogMetaDataObject = oldBlogMetaDataObject
       req.newBlogMetaDatObject = metaDataObject
       req.htmlFile = htmlFile
+
+      return next()
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  public deleteBlog(req: any, res: Response, next: NextFunction) {
+    try {
+      const { markdownFile }: { markdownFile: string } = req.params
+      const markdownFilePath: string = path.join(
+        this.blogRootPath,
+        constants.MARKDOWN_DIR_NAME,
+        markdownFile
+      )
+      const htmlFile: string = FileDirHelpers.changeFileExtension(
+        markdownFile,
+        '.md',
+        '.html'
+      )
+      const htmlFilePath: string = path.join(
+        this.blogRootPath,
+        constants.HTML_DIR_NAME,
+        htmlFile
+      )
+
+      if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
+        return next(new APIError(httpStatus.BAD_REQUEST, 'File is not existed'))
+      }
+
+      /** Get old meta data before delete this blog to use at the next middleware */
+      const metaDataObject: IMarkdownMetaDataObject = HtmlAndMarkdownService.getMarkdownMetaData(
+        markdownFilePath
+      )
+
+      HtmlAndMarkdownService.deteleHtmlAndMarkdownFile(
+        htmlFilePath,
+        markdownFilePath
+      )
+
+      /** Pass old meta data object to req to use at next middleware */
+      req.metaDataObject = metaDataObject
+      req.markdownFile = markdownFile
 
       return next()
     } catch (error) {

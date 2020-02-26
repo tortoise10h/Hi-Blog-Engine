@@ -22,7 +22,9 @@ class BlogUITemplate {
       <div class="container">
         <div class="author-profile"></div>
         <div class="table-content">
-          {{tableContent}}
+          <ul>
+            {{tableContent}}
+          </ul>
         </div>
         <div class="footer"></div>
       </div>

@@ -517,13 +517,17 @@ class TagService {
       /** Replace tags array in newMetadataObject by blogNewTags (this array just contains new tags)
        * to make sure just do this job with new tag
        * */
-      newMetadataObject.tags = blogNewTags
+
+      // clone newMetadataObject to metaDatObject to replace tags array to prevent effect on original
+      // newMetadataObject to use at the next middleware
+      const metaDatObject = _.clone(newMetadataObject)
+      metaDatObject.tags = blogNewTags
 
       return this.saveBlogLinkToTagFile(
         blogDefaultUrl,
         tagDirPath,
         htmlFileName,
-        newMetadataObject
+        metaDatObject
       )
     } catch (error) {
       throw new APIError(httpStatus.BAD_REQUEST, '', error)
@@ -550,34 +554,38 @@ class TagService {
     tagDirPath: string,
     tag: string,
     blogLink: string
-  ) {
+  ): Promise<any> {
     try {
       const tagFilePath = path.join(tagDirPath, `${tag}.html`)
       const tagConfigFilePath = path.join(tagDirPath, `${tag}.json`)
 
       const tagJSONObject = this.getTagFileConfigObject(tagConfigFilePath)
 
-      this.removeBlogLinkFromTagConfigFile(
-        tagJSONObject,
-        blogLink,
-        tagConfigFilePath
-      )
+      this.removeBlogLinkFromTagConfigObject(tagJSONObject, blogLink)
 
       /** Generate new html content for tag file without deleted blog link */
       const tagHtmlFileData: string = this.createTagHtmlFileData(
         tagJSONObject.blogs,
         tag
       )
-      this.writeTagFile(tagFilePath, tagHtmlFileData)
+
+      return Promise.all([
+        /** Write tag config file **/
+        FileDirHelpers.writeFilePromise(
+          tagConfigFilePath,
+          JSON.stringify(tagJSONObject)
+        ),
+        /** Write tag html file **/
+        FileDirHelpers.writeFilePromise(tagFilePath, tagHtmlFileData)
+      ])
     } catch (error) {
       throw new APIError(httpStatus.BAD_REQUEST, '', error)
     }
   }
 
-  public removeBlogLinkFromTagConfigFile(
+  public removeBlogLinkFromTagConfigObject(
     tagJSONObject: any,
-    blogLink: string,
-    tagConfigFilePath: string
+    blogLink: string
   ) {
     try {
       /** Find blog which has link same with the link need to remove in config object and eliminate it */
@@ -587,11 +595,28 @@ class TagService {
         ),
         1
       )
-
-      /** Save new config */
-      this.writeTagConfigFile(JSON.stringify(tagJSONObject), tagConfigFilePath)
     } catch (error) {
       throw new APIError(httpStatus.BAD_REQUEST, '', error)
+    }
+  }
+
+  public removeDeletedBlogLinkFromTags(
+    tags: Array<string>,
+    tagDirPath: string,
+    blogLink: string
+  ): Promise<any> {
+    try {
+      return this.removeBlogLinkFromBlogOldTagsProcess(
+        tags,
+        blogLink,
+        tagDirPath
+      )
+    } catch (error) {
+      throw new APIError(
+        httpStatus.BAD_REQUEST,
+        'Remove deleted blog link from tags error',
+        error
+      )
     }
   }
 }

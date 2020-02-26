@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express'
 import httpStatus from 'http-status'
 import fs from 'fs'
+import util from 'util'
 import path from 'path'
 import FileDirHelpers from '../helpers/file-dir-helpers'
 import BlogDirectoryService from '../services/blog-directory.service'
@@ -156,6 +157,28 @@ class BlogDirectoryController {
         indexHtmlFilePath
       )
       return APIResponse.success(res, 'Edit blog successfully')
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  public async removeDeletedBlogLinkFromIndexFile(
+    req: any,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { blogLink }: { blogLink: string } = req
+      const indexConfigFilePath = path.join(this.blogRootPath, 'index.json')
+      const indexHtmlFilePath = path.join(this.blogRootPath, 'index.html')
+
+      await BlogIndexService.removeBlogLinkFromIndexFile(
+        blogLink,
+        indexConfigFilePath,
+        indexHtmlFilePath
+      )
+
+      return APIResponse.success(res, 'Delete blog successfully')
     } catch (error) {
       return next(error)
     }
