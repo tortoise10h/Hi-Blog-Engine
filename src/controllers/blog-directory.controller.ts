@@ -72,6 +72,7 @@ class BlogDirectoryController {
     next: NextFunction
   ) {
     try {
+      console.log('in here')
       await BlogDirectoryService.createMissingFilesInHtmlDirFromMarkdownDir(
         this.markdownDirPath,
         this.htmlDirPath

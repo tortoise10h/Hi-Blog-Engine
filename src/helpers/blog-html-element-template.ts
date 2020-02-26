@@ -24,6 +24,11 @@ class BlogHtmlElementTemplate {
     <a href="${blogLink}">${title}</a>
     </li>`
   }
+
+  public static createOtherTagLink(tagName: string, tagUrl: string): string {
+    return `
+    <a href="${tagUrl}">${tagName}</a>`
+  }
 }
 
 export default BlogHtmlElementTemplate

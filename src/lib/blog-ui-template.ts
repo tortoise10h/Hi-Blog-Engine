@@ -56,7 +56,7 @@ class BlogUITemplate {
            </ul>
          </div>
          <div class="other-tag">
-           {{otherTag}}
+           {{otherTags}}
          </div>
        </div>
      </body>

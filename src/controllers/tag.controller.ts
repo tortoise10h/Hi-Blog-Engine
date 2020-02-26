@@ -9,17 +9,20 @@ import APIResponse from '../helpers/api-response'
 
 class TagController {
   private readonly blogDefaultUrl: string
-  private readonly blogRootPath: string
   private readonly tagDirPath: string
+  private readonly tagHtmlDirPath: string
+  private readonly tagConfigDirPath: string
 
   constructor(
-    blogRootPath: string,
     blogDefaultUrl: string,
-    tagDirPath: string
+    tagDirPath: string,
+    tagHtmlDirPath: string,
+    tagConfigDirPath: string
   ) {
     this.blogDefaultUrl = blogDefaultUrl
-    this.blogRootPath = blogRootPath
     this.tagDirPath = tagDirPath
+    this.tagConfigDirPath = tagConfigDirPath
+    this.tagHtmlDirPath = tagHtmlDirPath
   }
 
   public async saveFileToTag(req: any, res: Response, next: NextFunction) {
@@ -27,7 +30,10 @@ class TagController {
       const { newFileName } = req.body
       const { metaDataObject } = req
 
-      await TagService.saveBlogLinkToTagFile(
+      FileDirHelpers.createDirIfNotExistsOfGivenPath(this.tagConfigDirPath)
+      FileDirHelpers.createDirIfNotExistsOfGivenPath(this.tagHtmlDirPath)
+
+      await TagService.saveNewBlogLinkToTags(
         this.blogDefaultUrl,
         this.tagDirPath,
         `${newFileName}.html`,
@@ -59,7 +65,7 @@ class TagController {
         htmlFile
       )
 
-      TagService.handleTagOfBlogEdit(
+      TagService.handleTagsOfBlogAfterEditBlog(
         newBlogMetaDatObject,
         oldBlogMetaDataObject,
         blogLink,
@@ -101,6 +107,23 @@ class TagController {
       )
 
       req.blogLink = blogLink
+
+      return next()
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  public async updateAllCurrentTagsInEachTagFile(
+    req: any,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      TagService.updateAllCurrentTagsInEachTagFile(
+        this.tagDirPath,
+        this.blogDefaultUrl
+      )
 
       return next()
     } catch (error) {
