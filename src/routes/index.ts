@@ -17,26 +17,30 @@ const {
   htmlDirPath,
   tagDirPath,
   tagConfigDirPath,
-  tagHtmlDirPath
+  tagHtmlDirPath,
+  tagUrl
 } = Config.getEnviromentVariables()
 
 /** Initialize controller instances */
 const blogController = new BlogController(
   blogRootPath,
   markdownDirPath,
-  htmlDirPath
+  htmlDirPath,
+  blogDefaultUrl
 )
 const blogDirectoryController = new BlogDirectoryController(
   blogRootPath,
   blogDefaultUrl,
   markdownDirPath,
-  htmlDirPath
+  htmlDirPath,
+  tagUrl
 )
 const tagController = new TagController(
   blogDefaultUrl,
   tagDirPath,
   tagConfigDirPath,
-  tagHtmlDirPath
+  tagHtmlDirPath,
+  tagUrl
 )
 
 /** Home page - Writing blog page */
@@ -57,7 +61,7 @@ router.route('/').get(
 )
 
 router
-  .route('/blog-edit/:markdownFile')
+  .route('/blogs-edit/:markdownFile')
   /** Render edit blog page */
   .get(
     (req: any, res: Response, next: NextFunction) => {
@@ -116,5 +120,10 @@ router.route('/blogs').post(
     blogDirectoryController.generateIndexHtmlFileWithNewBlog(req, res, next)
   }
 )
+
+/** Handle unknow route */
+router.get('*', (req: Request, res: Response) => {
+  res.send('This route is not even real -_-')
+})
 
 export default router

@@ -12,6 +12,7 @@ import BlogUITemplate from '../lib/blog-ui-template'
 import HtmlBlockTemplate from '../helpers/blog-html-element-template'
 import MyArrayHelpers from '../helpers/my-array-helpers'
 import TagService from '../services/tag.service'
+import MyCustomHelpers from '../helpers/my-custom-helpers'
 
 const writeFile = util.promisify(fs.writeFile)
 
@@ -52,7 +53,9 @@ class HtmlMarkdownService {
     blogTagsArray: Array<string>,
     blogTitle: string,
     blogPublishMode: string,
-    blogDate: Date
+    blogDate: Date,
+    blogHomePageLink: string,
+    tagUrl: string
   ): Promise<any> {
     /** Append meta data to markdown content */
     markdownContent += this.createMarkdownFileMetaData(
@@ -65,13 +68,25 @@ class HtmlMarkdownService {
     /** Create html and markdown file path */
     const { htmlPath, markdownPath } = this.createHtmlandMarkdownPaths(fileName)
 
+    const fullBlogContent: string = this.createFullHtmlContentOfBlog(
+      htmlContent,
+      {
+        date: blogDate,
+        title: blogTitle,
+        tags: blogTagsArray,
+        publishMode: blogPublishMode
+      },
+      blogHomePageLink,
+      tagUrl
+    )
+
     /** If the directory that contain both html and markdown file does not exists then create them */
     FileDirHelpers.createDirIfNotExistsOfGivenPath(htmlPath)
     FileDirHelpers.createDirIfNotExistsOfGivenPath(markdownPath)
 
     /** Write html and markdown file down */
     const saveMarkdownandHtmlFilePromise = new Promise(resolve => {
-      writeFile(htmlPath, htmlContent)
+      writeFile(htmlPath, fullBlogContent)
         .then(() =>
           resolve({
             isOk: true,
@@ -80,7 +95,7 @@ class HtmlMarkdownService {
         )
         .catch(err => {
           console.log('[ERROR] ==========> Save html file error ', err)
-          throw new APIError(httpStatus.BAD_REQUEST, '', err)
+          throw err
         })
 
       writeFile(markdownPath, markdownContent)
@@ -92,11 +107,59 @@ class HtmlMarkdownService {
         })
         .catch(err => {
           console.log('[ERROR] ==========> Save markdown file error ', err)
-          throw new APIError(httpStatus.BAD_REQUEST, '', err)
+          throw err
         })
     })
 
     return Promise.resolve(saveMarkdownandHtmlFilePromise)
+  }
+
+  public createFullHtmlContentOfBlog(
+    htmlContent: string,
+    metaDataObject: IMarkdownMetaDataObject,
+    blogHomePageLink: string,
+    tagUrl: string
+  ) {
+    try {
+      const dateString: string = momentTimezone(metaDataObject.date)
+        .tz(constants.TIME_ZONE_LOCATION)
+        .format('dddd, MMMM Do YYYY')
+      const tagsElement: string = HtmlBlockTemplate.createTagsOfBlog(
+        metaDataObject.tags,
+        tagUrl
+      )
+
+      const blogHtmlTemplate: string = BlogUITemplate.getBlogFileTemplate()
+      const fullBlogContent: string = BlogUITemplate.addContentsToTemplate(
+        blogHtmlTemplate,
+        [
+          {
+            template_sign: '{{blogContent}}',
+            content: htmlContent
+          },
+          {
+            template_sign: '{{blogHomePageLink}}',
+            content: blogHomePageLink
+          },
+          {
+            template_sign: '{{blogTitle}}',
+            content: metaDataObject.title
+          },
+          {
+            template_sign: '{{blogDate}}',
+            content: dateString
+          },
+          {
+            template_sign: '{{blogTags}}',
+            content: tagsElement
+          }
+        ]
+      )
+
+      return fullBlogContent
+    } catch (error) {
+      throw error
+    }
   }
 
   public createMarkdownFileMetaData(
@@ -171,7 +234,7 @@ class HtmlMarkdownService {
 
       return metaDataObject
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -278,7 +341,9 @@ class HtmlMarkdownService {
     htmlFile: string,
     markdownContent: string,
     htmlContent: string,
-    metaDataObject: IMarkdownMetaDataObject
+    metaDataObject: IMarkdownMetaDataObject,
+    blogHomePageLink: string,
+    tagUrl: string
   ): Promise<any> {
     try {
       const { date, tags, title, publishMode } = metaDataObject
@@ -293,16 +358,23 @@ class HtmlMarkdownService {
         publishMode
       )
 
+      const blogHtmlFullContent: string = this.createFullHtmlContentOfBlog(
+        htmlContent,
+        metaDataObject,
+        blogHomePageLink,
+        tagUrl
+      )
+
       markdownContent += metaDataString
 
       return this.writeEditBlogProcess(
         htmlFilePath,
         markdownFilePath,
         markdownContent,
-        htmlContent
+        blogHtmlFullContent
       )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -323,7 +395,7 @@ class HtmlMarkdownService {
               `[ERROR] ==========> Edit html file ${htmlFilePath} error `,
               err
             )
-            throw new APIError(httpStatus.BAD_REQUEST, '', err)
+            throw err
           })
 
         writeFile(htmlFilePath, htmlContent, { encoding: 'utf-8' })
@@ -333,13 +405,13 @@ class HtmlMarkdownService {
               `[ERROR] ==========> Edit html file ${htmlFilePath} error `,
               err
             )
-            throw new APIError(httpStatus.BAD_REQUEST, '', err)
+            throw err
           })
       })
 
       return Promise.resolve(writeProcess)
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -353,11 +425,7 @@ class HtmlMarkdownService {
         fs.unlinkSync(htmlFilePath)
       }
     } catch (error) {
-      throw new APIError(
-        httpStatus.BAD_REQUEST,
-        'Delete html and markdown file error',
-        error
-      )
+      throw error
     }
   }
 }

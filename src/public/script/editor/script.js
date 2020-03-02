@@ -4,6 +4,7 @@ window.onload = () => {
 
   const convertTextToMarkdown = () => {
     let markdownText = editor.value
+    markdownText = parseEmoji(markdownText)
     const htmlContent = converter.render(markdownText)
     markdownArea.innerHTML = htmlContent
   }
@@ -25,7 +26,6 @@ const confirmSaveBtn = document.getElementById('confirmSaveBtn')
 
 /** ===== When press save button ===== */
 saveBlogButton.addEventListener('click', () => {
-  const infoSavePopup = document.getElementById('infoSavePopup')
   const blogTitleInput = document.getElementById('blogTitle')
   const blogTagsInput = document.getElementById('blogTags')
 
@@ -37,40 +37,8 @@ saveBlogButton.addEventListener('click', () => {
     return
   }
 
-  infoSavePopup.classList.toggle('show-info-save-popup')
-  infoSavePopupBackground.style.display = 'block'
+  $('#saveBlogModal').modal('show')
 })
-
-const checkInputEmpty = (inputTag, alertId) => {
-  const inputValue = inputTag.value.trim()
-  const alertElement = document.getElementById(alertId)
-  if (!inputValue || inputValue === '') {
-    alertElement.style.color = 'red'
-    alertElement.innerText = 'This field must be not empty'
-    window.scrollTo(0, 0)
-    inputTag.focus()
-    return false
-  }
-  alertElement.innerText = ''
-  return true
-}
-/** When press outside save info pop then close popup */
-// infoSavePopupBackground.addEventListener('click', () => {
-// const infoSavePopup = document.getElementById('infoSavePopup')
-
-// infoSavePopup.classList.remove('show-info-save-popup')
-// infoSavePopupBackground.style.display = 'none'
-// })
-
-/** When press close button of save popup */
-const closeSavePopup = () => {
-  const infoSavePopup = document.getElementById('infoSavePopup')
-
-  infoSavePopup.classList.remove('show-info-save-popup')
-  infoSavePopupBackground.style.display = 'none'
-}
-
-infoSavePopupCloseBtn.addEventListener('click', closeSavePopup)
 
 /** When press confirm save */
 confirmSaveBtn.addEventListener('click', async () => {
@@ -84,7 +52,8 @@ confirmSaveBtn.addEventListener('click', async () => {
     const blogPublishModeSelect = document.getElementById('publishModeSelect')
 
     const newFileName = newFileNameBox.value
-    const markdownContent = editor.value
+    let markdownContent = editor.value
+    markdownContent = parseEmoji(markdownContent)
     const htmlContent = converter.render(markdownContent)
     const blogTitle = blogTitleInput.value
     const blogDate = blogDateInput.value || new Date()
@@ -95,6 +64,7 @@ confirmSaveBtn.addEventListener('click', async () => {
     /** Check file name */
     const [isFileValid, alertType, alertMessage] = checkFileName(newFileName)
     if (!isFileValid) {
+      console.log('error')
       fileNameAlertBox.style.color = alertType === 'error' ? 'red' : 'orange'
       fileNameAlertBox.innerText = alertMessage
       return
@@ -139,25 +109,12 @@ const checkFileName = fileName => {
     return [false, 'error', 'File name must not be empty']
   }
 
-  if (!/^[\w,\s-]{1,255}$/.test(fileName)) {
+  if (!/^([\w+]\w+|[\.\-]\w+){1,255}$/.test(fileName)) {
     return [
       false,
       'error',
-      'Your file name is not valid (file name must be NO SPACE and MAX 255 characters)'
+      'Your file name is not valid (file name must be NO SPACE, MAX 255 characters and no accept -. at the end or start of the name)'
     ]
   }
   return [true]
-}
-
-const parseBlogTagsValueToArray = blogTagsValue => {
-  let blogTagsArray = blogTagsValue.split(',')
-
-  /** Blank space element will be remove and trim all valid tag to make sure there is no space in tag*/
-  blogTagsArray = blogTagsArray
-    .filter(tag => {
-      return /\w+/.test(tag)
-    })
-    .map(tag => tag.trim())
-
-  return blogTagsArray
 }

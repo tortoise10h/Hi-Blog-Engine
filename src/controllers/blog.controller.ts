@@ -15,15 +15,18 @@ class BlogController {
   private readonly markdownDirPath: string
   private readonly htmlDirPath: string
   private readonly blogRootPath: string
+  private readonly blogDefaultUrl: string
 
   constructor(
     blogRootPath: string,
     markdownDirPath: string,
-    htmlDirPath: string
+    htmlDirPath: string,
+    blogDefaultUrl: string
   ) {
     this.blogRootPath = blogRootPath
     this.markdownDirPath = markdownDirPath
     this.htmlDirPath = htmlDirPath
+    this.blogDefaultUrl = blogDefaultUrl
   }
 
   public async saveBlog(req: any, res: Response, next: NextFunction) {
@@ -37,6 +40,16 @@ class BlogController {
         blogDate,
         newFileName
       } = req.body
+      const blogHomePageLink: string = path.join(
+        this.blogDefaultUrl,
+        'index.html'
+      )
+      const tagUrl: string = path.join(
+        this.blogDefaultUrl,
+        constants.TAG_DIR_NAME,
+        constants.TAG_HTML_DIR_NAME
+      )
+      const minRead = MyCustomHelpers.calculateMinRead(markdownContent)
 
       /** Check files exist or not */
       const {
@@ -56,7 +69,9 @@ class BlogController {
         blogTagsArray,
         blogTitle,
         blogPublishMode,
-        blogDate
+        blogDate,
+        blogHomePageLink,
+        tagUrl
       )
 
       /** Get blog meta data object to use at next middleware -> save file to tag */
@@ -66,6 +81,7 @@ class BlogController {
 
       req.metaDataObject = metaDataObject
       req.newFileName = newFileName
+      req.minRead = minRead
 
       return next()
     } catch (err) {
@@ -77,7 +93,6 @@ class BlogController {
     try {
       const { markdownFile } = req.params
       const { rootDir } = req
-      console.log(`this: ${this}`)
       const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
 
       const {
@@ -93,7 +108,8 @@ class BlogController {
       res.render('edit-page', {
         rootDir,
         metaDataObject,
-        markdownContent
+        markdownContent,
+        markdownFile
       })
     } catch (error) {
       return next(error)
@@ -121,6 +137,16 @@ class BlogController {
         '.md',
         '.html'
       )
+      const blogHomePageLink: string = path.join(
+        this.blogDefaultUrl,
+        'index.html'
+      )
+      const minRead = MyCustomHelpers.calculateMinRead(markdownContent)
+      const tagUrl: string = path.join(
+        this.blogDefaultUrl,
+        constants.TAG_DIR_NAME,
+        constants.TAG_HTML_DIR_NAME
+      )
       const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
 
       /** Make sure edit file is exists */
@@ -144,7 +170,9 @@ class BlogController {
         htmlFile,
         markdownContent,
         htmlContent,
-        metaDataObject
+        metaDataObject,
+        blogHomePageLink,
+        tagUrl
       )
 
       /** Old data to compare link in old tag and remove & new data will use to create new link
@@ -153,6 +181,7 @@ class BlogController {
       req.oldBlogMetaDataObject = oldBlogMetaDataObject
       req.newBlogMetaDatObject = metaDataObject
       req.htmlFile = htmlFile
+      req.minRead = minRead
 
       return next()
     } catch (error) {

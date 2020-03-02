@@ -14,10 +14,6 @@ const PORT = process.env.SERVER_PORT || 5099
 /** Init app */
 const app: Application = express()
 
-app.get('/huy', (req, res) => {
-  res.end('Yo')
-})
-
 /** View engine */
 app.set('views', 'src/views')
 app.engine(

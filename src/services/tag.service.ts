@@ -17,6 +17,8 @@ interface IBlogConfigInTag {
   title: string
   blogLink: string
   publishMode: string
+  tags: Array<string>
+  minRead: number
 }
 
 interface ITagTypeOfBlogEdit {
@@ -28,12 +30,13 @@ interface ITagTypeOfBlogEdit {
 class TagService {
   public saveNewBlogLinkToTags(
     blogDefaultUrl: string,
+    tagUrl: string,
     tagDirPath: string,
     htmlFileName: string,
-    newBlogMeata: IMarkdownMetaDataObject
+    newBlogMetaDataObject: IMarkdownMetaDataObject,
+    minRead: number
   ): Promise<any> {
     try {
-      const { tags, title, date, publishMode } = newBlogMeata
       const blogLink = path.join(
         blogDefaultUrl,
         constants.HTML_DIR_NAME,
@@ -41,12 +44,11 @@ class TagService {
       )
 
       return this.writeNewBlogLinkToTagsProcess(
-        tags,
         tagDirPath,
+        tagUrl,
         blogLink,
-        title,
-        date,
-        publishMode
+        newBlogMetaDataObject,
+        minRead
       )
     } catch (error) {
       throw error
@@ -54,19 +56,18 @@ class TagService {
   }
 
   public writeNewBlogLinkToTagsProcess(
-    tags: Array<string>,
     tagDirPath: string,
+    tagUrl: string,
     blogLink: string,
-    title: string,
-    date: Date,
-    publishMode: string
+    metaDataObject: IMarkdownMetaDataObject,
+    minRead: number
   ): Promise<any> {
     try {
       /** Loop through all tags of blog
        * If tag is not exists then create file and write the link
        * If tag is exists then append new blog link
        * */
-      const writeLinkToTagFileProcess = tags.map(tag => {
+      const writeLinkToTagFileProcess = metaDataObject.tags.map(tag => {
         const tagFilePath = path.join(
           tagDirPath,
           constants.TAG_HTML_DIR_NAME,
@@ -77,23 +78,23 @@ class TagService {
           constants.TAG_CONFIG_DIR_NAME,
           `${tag}.json`
         )
+        const blogConfigInTag: IBlogConfigInTag = {
+          ...metaDataObject,
+          blogLink,
+          minRead
+        }
         let tagData: string = this.prepareContentForWriteNewBlogLinkToTags(
           tagFilePath,
           tagDirPath,
           tag,
-          blogLink,
-          title,
-          date,
-          publishMode
+          tagUrl,
+          blogConfigInTag
         )
 
         return Promise.all([
           FileDirHelpers.writeFilePromise(tagFilePath, tagData),
           this.checkAndWriteTagConfigFileDown(
-            title,
-            blogLink,
-            date,
-            publishMode,
+            blogConfigInTag,
             tagJSONConfigPath
           )
         ])
@@ -106,10 +107,7 @@ class TagService {
   }
 
   public checkAndWriteTagConfigFileDown(
-    title: string,
-    blogLink: string,
-    date: Date,
-    publishMode: string,
+    blogConfigInTag: IBlogConfigInTag,
     tagJSONConfigPath: string
   ): Promise<any> {
     try {
@@ -118,10 +116,7 @@ class TagService {
         const tagConfigObject = {
           blogs: [
             {
-              title,
-              blogLink,
-              date,
-              publishMode
+              ...blogConfigInTag
             }
           ]
         }
@@ -132,10 +127,7 @@ class TagService {
         )
       }
       return this.addNewBlogInfoToTagConfigFile(
-        title,
-        date,
-        blogLink,
-        publishMode,
+        blogConfigInTag,
         tagJSONConfigPath
       )
     } catch (error) {
@@ -144,10 +136,7 @@ class TagService {
   }
 
   public addNewBlogInfoToTagConfigFile(
-    title: string,
-    date: Date,
-    blogLink: string,
-    publishMode: string,
+    blogConfigInTag: IBlogConfigInTag,
     tagJSONConfigPath: string
   ): Promise<any> {
     try {
@@ -156,10 +145,7 @@ class TagService {
       })
       const configObject = JSON.parse(configContent)
       configObject.blogs.push({
-        title,
-        date,
-        publishMode,
-        blogLink
+        ...blogConfigInTag
       })
 
       return FileDirHelpers.writeFilePromise(
@@ -175,19 +161,17 @@ class TagService {
     tagFilePath: string,
     tagDirPath: string,
     tag: string,
-    blogLink: string,
-    title: string,
-    date: Date,
-    publishMode: string
+    tagUrl: string,
+    blogConfigInTag: IBlogConfigInTag
   ): string {
     try {
       let tagData: string
       if (!fs.existsSync(tagFilePath)) {
         /** If tag file is not exists */
         const newTagFileContent: string = this.createHtmlContentForNewTag(
-          blogLink,
-          title,
-          tag
+          blogConfigInTag,
+          tag,
+          tagUrl
         )
         tagData = newTagFileContent
       } else {
@@ -195,10 +179,8 @@ class TagService {
         tagData = this.createHtmlContentForExistedTagFile(
           tagDirPath,
           tag,
-          blogLink,
-          title,
-          date,
-          publishMode
+          blogConfigInTag,
+          tagUrl
         )
       }
 
@@ -210,7 +192,8 @@ class TagService {
 
   public updateAllCurrentTagsInEachTagFile(
     tagDirPath: string,
-    blogDefaultUrl: string
+    blogDefaultUrl: string,
+    tagUrl: string
   ): Promise<any> {
     try {
       const tagHtmlFiles: Array<string> = fs.readdirSync(
@@ -223,7 +206,7 @@ class TagService {
         path.join(tagDirPath, constants.TAG_HTML_DIR_NAME, tagFile)
       )
       const tagsUrl: Array<string> = tagHtmlFiles.map(tagFile =>
-        path.join(blogDefaultUrl, constants.TAG_HTML_DIR_NAME, tagFile)
+        path.join(tagUrl, tagFile)
       )
       const tagsConfigPath: Array<string> = tagHtmlFiles.map(tagFile => {
         const tagConfigFile = FileDirHelpers.changeFileExtension(
@@ -250,7 +233,8 @@ class TagService {
           const tagConfigObject = this.getTagFileConfigObject(configPath)
           let tagNewHtmlData = this.createTagHtmlFileData(
             tagConfigObject.blogs,
-            tagsName[index]
+            tagsName[index],
+            tagUrl
           )
 
           /** Append all current tag to each tag new html data */
@@ -298,15 +282,22 @@ class TagService {
   }
 
   public createHtmlContentForNewTag(
-    blogLink: string,
-    title: string,
-    tag: string
+    blogConfigInTag: IBlogConfigInTag,
+    tag: string,
+    tagUrl: string
   ) {
     try {
       let newTagFileContent: string = BlogUITemplate.getTagFileTemplate()
+      const blogOfTagTags: string = BlogHtmlElementTemplate.createBlogOfTagTags(
+        blogConfigInTag.tags,
+        tagUrl
+      )
       const htmlLinkElement: string = BlogHtmlElementTemplate.createTagBlogLink(
-        blogLink,
-        title
+        blogConfigInTag.blogLink,
+        blogConfigInTag.title,
+        blogConfigInTag.date,
+        blogOfTagTags,
+        blogConfigInTag.minRead
       )
 
       newTagFileContent = BlogUITemplate.addContentsToTemplate(
@@ -332,10 +323,8 @@ class TagService {
   public createHtmlContentForExistedTagFile(
     tagDirPath: string,
     tag: string,
-    blogLink: string,
-    title: string,
-    date: Date,
-    publishMode: string
+    blogConfigInTag: IBlogConfigInTag,
+    tagUrl: string
   ): string {
     try {
       /** Read data of existed tag file */
@@ -346,13 +335,6 @@ class TagService {
       )
       const tagJSONObject = this.getTagFileConfigObject(tagJSONFilePath)
 
-      const blogConfigInTag: IBlogConfigInTag = {
-        title,
-        blogLink,
-        date,
-        publishMode
-      }
-
       /** Push new blog config object to blog config object array
        * to map them and create new tag html table content */
       tagJSONObject.blogs.push(blogConfigInTag)
@@ -361,7 +343,8 @@ class TagService {
 
       const tagFileTemplate: string = this.createTagHtmlFileData(
         tagJSONObject.blogs,
-        tag
+        tag,
+        tagUrl
       )
 
       return tagFileTemplate
@@ -382,15 +365,23 @@ class TagService {
 
   public createTagHtmlFileData(
     blogObjectArray: Array<IBlogConfigInTag>,
-    tag: string
+    tag: string,
+    tagUrl: string
   ): string {
     let tagFileTemplate: string = BlogUITemplate.getTagFileTemplate()
     let htmlTableContent = ''
 
     blogObjectArray.forEach((blog: IBlogConfigInTag) => {
+      const blogOfTagTags: string = BlogHtmlElementTemplate.createBlogOfTagTags(
+        blog.tags,
+        tagUrl
+      )
       const blogLinkElement = BlogHtmlElementTemplate.createTagBlogLink(
         blog.blogLink,
-        blog.title
+        blog.title,
+        blog.date,
+        blogOfTagTags,
+        blog.minRead
       )
       htmlTableContent += blogLinkElement
     })
@@ -459,8 +450,10 @@ class TagService {
     blogLink: string,
     tagDirPath: string,
     blogDefaultUrl: string,
-    htmlFile: string
-  ) {
+    htmlFile: string,
+    tagUrl: string,
+    minRead: number
+  ): Promise<any> {
     try {
       /**
        * - newTags to add blog link to those tags (or create new tag if it's not exist)
@@ -472,20 +465,31 @@ class TagService {
         oldMetaDataObject
       )
 
-      this.removeBlogLinkFromBlogOldTagsProcess(oldTags, blogLink, tagDirPath)
-      this.writeBlogLinkToBlogNewTagProcess(
-        newTags,
-        blogDefaultUrl,
-        newMetadataObject,
-        tagDirPath,
-        htmlFile
-      )
-      this.updateBlogInfoInStableTagsConfigProcess(
-        stableTags,
-        blogLink,
-        newMetadataObject,
-        tagDirPath
-      )
+      return Promise.all([
+        this.removeBlogLinkFromBlogOldTagsProcess(
+          oldTags,
+          blogLink,
+          tagDirPath,
+          tagUrl
+        ),
+        this.writeBlogLinkToBlogNewTagProcess(
+          newTags,
+          blogDefaultUrl,
+          newMetadataObject,
+          tagDirPath,
+          htmlFile,
+          tagUrl,
+          minRead
+        ),
+        this.updateBlogInfoInStableTagsConfigProcess(
+          stableTags,
+          blogLink,
+          newMetadataObject,
+          tagDirPath,
+          tagUrl,
+          minRead
+        )
+      ])
     } catch (error) {
       throw error
     }
@@ -512,7 +516,9 @@ class TagService {
     stableTags: Array<string>,
     blogLink: string,
     newMetadataObject: IMarkdownMetaDataObject,
-    tagDirPath: string
+    tagDirPath: string,
+    tagUrl: string,
+    minRead: number
   ): Promise<any> {
     try {
       const writeProcess = stableTags.map(tag => {
@@ -532,13 +538,15 @@ class TagService {
         tagJSONObject = this.updateBlogInfoOfEditedBlog(
           tagJSONObject,
           blogLink,
-          newMetadataObject
+          newMetadataObject,
+          minRead
         )
 
         /** Generate new html content for tag file with edited blog new info */
         const tagHtmlFileData: string = this.createTagHtmlFileData(
           tagJSONObject.blogs,
-          tag
+          tag,
+          tagUrl
         )
 
         /** Save html & config content */
@@ -560,7 +568,8 @@ class TagService {
   public updateBlogInfoOfEditedBlog(
     tagJSONObject: any,
     blogLink: string,
-    newMetadataObject: IMarkdownMetaDataObject
+    newMetadataObject: IMarkdownMetaDataObject,
+    minRead: number
   ) {
     /** Find edit blog position in blogs array to update new info */
     const editedBlogPosition = tagJSONObject.blogs.findIndex(
@@ -569,10 +578,9 @@ class TagService {
 
     /** Replace edited blog with new info */
     tagJSONObject.blogs[editedBlogPosition] = {
-      title: newMetadataObject.title,
-      date: newMetadataObject.date,
-      publishMode: newMetadataObject.publishMode,
-      blogLink
+      ...newMetadataObject,
+      blogLink,
+      minRead
     }
 
     return tagJSONObject
@@ -583,7 +591,9 @@ class TagService {
     blogDefaultUrl: string,
     newMetadataObject: IMarkdownMetaDataObject,
     tagDirPath: string,
-    htmlFileName: string
+    htmlFileName: string,
+    tagUrl: string,
+    minRead: number
   ): Promise<any> {
     try {
       /** Replace tags array in newMetadataObject by blogNewTags (this array just contains new tags)
@@ -597,9 +607,11 @@ class TagService {
 
       return this.saveNewBlogLinkToTags(
         blogDefaultUrl,
+        tagUrl,
         tagDirPath,
         htmlFileName,
-        metaDatObject
+        metaDatObject,
+        minRead
       )
     } catch (error) {
       throw error
@@ -609,11 +621,12 @@ class TagService {
   public removeBlogLinkFromBlogOldTagsProcess(
     blogOldTags: Array<string>,
     blogLink: string,
-    tagDirPath: string
+    tagDirPath: string,
+    tagUrl: string
   ): Promise<any> {
     try {
       const removeProcess = blogOldTags.map(tag => {
-        this.removeBlogLinkFromTag(tagDirPath, tag, blogLink)
+        this.removeBlogLinkFromTag(tagDirPath, tag, blogLink, tagUrl)
       })
 
       return Promise.all(removeProcess)
@@ -625,7 +638,8 @@ class TagService {
   public removeBlogLinkFromTag(
     tagDirPath: string,
     tag: string,
-    blogLink: string
+    blogLink: string,
+    tagUrl: string
   ): Promise<any> {
     try {
       const tagFilePath = path.join(
@@ -646,7 +660,8 @@ class TagService {
       /** Generate new html content for tag file without deleted blog link */
       const tagHtmlFileData: string = this.createTagHtmlFileData(
         tagJSONObject.blogs,
-        tag
+        tag,
+        tagUrl
       )
 
       return Promise.all([
@@ -683,13 +698,15 @@ class TagService {
   public removeDeletedBlogLinkFromTags(
     tags: Array<string>,
     tagDirPath: string,
-    blogLink: string
+    blogLink: string,
+    tagUrl: string
   ): Promise<any> {
     try {
       return this.removeBlogLinkFromBlogOldTagsProcess(
         tags,
         blogLink,
-        tagDirPath
+        tagDirPath,
+        tagUrl
       )
     } catch (error) {
       throw error

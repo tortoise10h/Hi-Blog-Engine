@@ -25,6 +25,11 @@ class Config {
       constants.TAG_CONFIG_DIR_NAME
     )
     const tagHtmlDirPath = path.join(tagDirPath, constants.TAG_HTML_DIR_NAME)
+    const tagUrl = path.join(
+      blogDefaultUrl,
+      constants.TAG_DIR_NAME,
+      constants.TAG_HTML_DIR_NAME
+    )
 
     return {
       blogRootPath,
@@ -33,7 +38,8 @@ class Config {
       htmlDirPath,
       tagDirPath,
       tagConfigDirPath,
-      tagHtmlDirPath
+      tagHtmlDirPath,
+      tagUrl
     }
   }
 }

@@ -17,17 +17,20 @@ class BlogDirectoryController {
   private readonly htmlDirPath: string
   private readonly blogRootPath: string
   private readonly blogDefaultUrl: string
+  private readonly tagUrl: string
 
   constructor(
     blogRootPath: string,
     blogDefaultUrl: string,
     markdownDirPath: string,
-    htmlDirPath: string
+    htmlDirPath: string,
+    tagUrl: string
   ) {
     this.blogRootPath = blogRootPath
     this.blogDefaultUrl = blogDefaultUrl
     this.markdownDirPath = markdownDirPath
     this.htmlDirPath = htmlDirPath
+    this.tagUrl = tagUrl
   }
 
   public async checkValidRootBlogDirectory(
@@ -72,7 +75,6 @@ class BlogDirectoryController {
     next: NextFunction
   ) {
     try {
-      console.log('in here')
       await BlogDirectoryService.createMissingFilesInHtmlDirFromMarkdownDir(
         this.markdownDirPath,
         this.htmlDirPath
@@ -91,15 +93,22 @@ class BlogDirectoryController {
     try {
       const {
         newFileName,
-        metaDataObject
-      }: { newFileName: string; metaDataObject: IMarkdownMetaDataObject } = req
+        metaDataObject,
+        minRead
+      }: {
+        newFileName: string
+        metaDataObject: IMarkdownMetaDataObject
+        minRead: number
+      } = req
 
       BlogIndexService.generateIndexHtmlFileWithNewBlog(
         this.blogRootPath,
         this.blogDefaultUrl,
         this.htmlDirPath,
         newFileName,
-        metaDataObject
+        metaDataObject,
+        minRead,
+        this.tagUrl
       )
 
       return APIResponse.success(res, 'Save file successfully')
@@ -116,10 +125,12 @@ class BlogDirectoryController {
     try {
       const {
         newBlogMetaDatObject,
-        htmlFile
+        htmlFile,
+        minRead
       }: {
         newBlogMetaDatObject: IMarkdownMetaDataObject
         htmlFile: string
+        minRead: number
       } = req
 
       const blogLink = path.join(
@@ -137,7 +148,8 @@ class BlogDirectoryController {
       const blogInfoObject: IBlogInfoInIndexConfig = {
         ...newBlogMetaDatObject,
         blogLink,
-        fileName: htmlFileName
+        fileName: htmlFileName,
+        minRead
       }
 
       await BlogIndexService.updateBlogInfoInIndexConfigFile(
@@ -155,7 +167,8 @@ class BlogDirectoryController {
 
       BlogIndexService.generateNewIndexHtmlFile(
         indexConfigObject.blogs,
-        indexHtmlFilePath
+        indexHtmlFilePath,
+        this.tagUrl
       )
       return APIResponse.success(res, 'Edit blog successfully')
     } catch (error) {
@@ -176,7 +189,8 @@ class BlogDirectoryController {
       await BlogIndexService.removeBlogLinkFromIndexFile(
         blogLink,
         indexConfigFilePath,
-        indexHtmlFilePath
+        indexHtmlFilePath,
+        this.tagUrl
       )
 
       return APIResponse.success(res, 'Delete blog successfully')

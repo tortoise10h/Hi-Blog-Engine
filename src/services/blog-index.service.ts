@@ -17,6 +17,7 @@ export interface IBlogInfoInIndexConfig {
   publishMode: string
   blogLink: string
   fileName: string
+  minRead: number
 }
 
 class BlogIndexService {
@@ -25,7 +26,9 @@ class BlogIndexService {
     blogDefaultUrl: string,
     htmlDirPath: string,
     newFileName: string,
-    newBlogMetaDatObject: IMarkdownMetaDataObject
+    newBlogMetaDatObject: IMarkdownMetaDataObject,
+    minRead: number,
+    tagUrl: string
   ) {
     try {
       const indexConfigFilePath: string = path.join(blogRootPath, 'index.json')
@@ -46,7 +49,8 @@ class BlogIndexService {
         date: newBlogMetaDatObject.date,
         tags: newBlogMetaDatObject.tags,
         blogLink: newBlogLink,
-        fileName: newFileName
+        fileName: newFileName,
+        minRead
       }
 
       indexConfigObject.blogs = this.updateBlogArrInIndexConfigCompareToCurrentHtmlDir(
@@ -55,18 +59,18 @@ class BlogIndexService {
         htmlDirPath
       )
 
-      this.generateNewIndexHtmlFile(indexConfigObject.blogs, indexHtmlFilePath)
+      this.generateNewIndexHtmlFile(
+        indexConfigObject.blogs,
+        indexHtmlFilePath,
+        tagUrl
+      )
 
       FileDirHelpers.writeFilePromise(
         indexConfigFilePath,
         JSON.stringify(indexConfigObject)
       )
     } catch (error) {
-      throw new APIError(
-        httpStatus.BAD_REQUEST,
-        'Generate index html file for blog error',
-        error
-      )
+      throw error
     }
   }
 
@@ -86,7 +90,7 @@ class BlogIndexService {
 
       return indexConfigObject
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -140,16 +144,20 @@ class BlogIndexService {
   }
 
   public prepareIndexHtmlTemplate(
-    blogInfoArray: Array<IBlogInfoInIndexConfig>
+    blogInfoArray: Array<IBlogInfoInIndexConfig>,
+    tagUrl: string
   ): string {
     let homepageTemplate: string = BlogUITemplate.getHomepageTemplate()
 
-    const tableOfContentData = this.createIndexHtmlTableContent(blogInfoArray)
+    const tableOfContentData = this.createIndexHtmlTableContent(
+      blogInfoArray,
+      tagUrl
+    )
 
     /** Put table of content data to template file */
     homepageTemplate = BlogUITemplate.addContentsToTemplate(homepageTemplate, [
       {
-        template_sign: '{{tableContent}}',
+        template_sign: '{{indexTableContent}}',
         content: tableOfContentData
       }
     ])
@@ -158,7 +166,8 @@ class BlogIndexService {
   }
 
   public createIndexHtmlTableContent(
-    blogInfoArray: Array<IBlogInfoInIndexConfig>
+    blogInfoArray: Array<IBlogInfoInIndexConfig>,
+    tagUrl: string
   ): string {
     let result = ''
 
@@ -168,9 +177,17 @@ class BlogIndexService {
     )
 
     ascendingBlogInfoArr.forEach((blogInfoObject: IBlogInfoInIndexConfig) => {
+      const blogOfHomepageTags: string = HtmlBlockTemplate.createBlogOfHomepageTags(
+        blogInfoObject.tags,
+        tagUrl
+      )
+
       const blogLinkElement = HtmlBlockTemplate.createHomePageBlogLink(
         blogInfoObject.blogLink,
-        blogInfoObject.title
+        blogInfoObject.title,
+        blogInfoObject.date,
+        blogInfoObject.minRead,
+        blogOfHomepageTags
       )
 
       result += blogLinkElement
@@ -193,11 +210,13 @@ class BlogIndexService {
 
   public generateNewIndexHtmlFile(
     blogInfoArr: Array<IBlogInfoInIndexConfig>,
-    indexHtmlFilePath: string
+    indexHtmlFilePath: string,
+    tagUrl: string
   ): Promise<any> {
     try {
       const homePageHtmlContent: string = this.prepareIndexHtmlTemplate(
-        blogInfoArr
+        blogInfoArr,
+        tagUrl
       )
 
       return FileDirHelpers.writeFilePromise(
@@ -257,7 +276,8 @@ class BlogIndexService {
   public removeBlogLinkFromIndexFile(
     blogLink: string,
     indexConfigFilePath: string,
-    indexHtmlFilePath: string
+    indexHtmlFilePath: string,
+    tagUrl: string
   ): Promise<any> {
     try {
       const indexConfigObject = this.getIndexConfigObject(indexConfigFilePath)
@@ -270,7 +290,8 @@ class BlogIndexService {
       return Promise.all([
         this.generateNewIndexHtmlFile(
           indexConfigObject.blogs,
-          indexHtmlFilePath
+          indexHtmlFilePath,
+          tagUrl
         ),
         FileDirHelpers.writeFilePromise(
           indexConfigFilePath,

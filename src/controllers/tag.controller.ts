@@ -12,32 +12,37 @@ class TagController {
   private readonly tagDirPath: string
   private readonly tagHtmlDirPath: string
   private readonly tagConfigDirPath: string
+  private readonly tagUrl: string
 
   constructor(
     blogDefaultUrl: string,
     tagDirPath: string,
     tagHtmlDirPath: string,
-    tagConfigDirPath: string
+    tagConfigDirPath: string,
+    tagUrl: string
   ) {
     this.blogDefaultUrl = blogDefaultUrl
     this.tagDirPath = tagDirPath
     this.tagConfigDirPath = tagConfigDirPath
     this.tagHtmlDirPath = tagHtmlDirPath
+    this.tagUrl = tagUrl
   }
 
   public async saveFileToTag(req: any, res: Response, next: NextFunction) {
     try {
       const { newFileName } = req.body
-      const { metaDataObject } = req
+      const { metaDataObject, minRead } = req
 
       FileDirHelpers.createDirIfNotExistsOfGivenPath(this.tagConfigDirPath)
       FileDirHelpers.createDirIfNotExistsOfGivenPath(this.tagHtmlDirPath)
 
       await TagService.saveNewBlogLinkToTags(
         this.blogDefaultUrl,
+        this.tagUrl,
         this.tagDirPath,
         `${newFileName}.html`,
-        metaDataObject
+        metaDataObject,
+        minRead
       )
 
       return next()
@@ -53,7 +58,7 @@ class TagController {
   ) {
     try {
       const { markdownFile } = req.params
-      const { newBlogMetaDatObject, oldBlogMetaDataObject } = req
+      const { newBlogMetaDatObject, oldBlogMetaDataObject, minRead } = req
       const htmlFile = FileDirHelpers.changeFileExtension(
         markdownFile,
         '.md',
@@ -65,14 +70,17 @@ class TagController {
         htmlFile
       )
 
-      TagService.handleTagsOfBlogAfterEditBlog(
+      await TagService.handleTagsOfBlogAfterEditBlog(
         newBlogMetaDatObject,
         oldBlogMetaDataObject,
         blogLink,
         this.tagDirPath,
         this.blogDefaultUrl,
-        htmlFile
+        htmlFile,
+        this.tagUrl,
+        minRead
       )
+
       return next()
     } catch (error) {
       return next(error)
@@ -103,7 +111,8 @@ class TagController {
       await TagService.removeDeletedBlogLinkFromTags(
         metaDataObject.tags,
         this.tagDirPath,
-        blogLink
+        blogLink,
+        this.tagUrl
       )
 
       req.blogLink = blogLink
@@ -120,9 +129,10 @@ class TagController {
     next: NextFunction
   ) {
     try {
-      TagService.updateAllCurrentTagsInEachTagFile(
+      await TagService.updateAllCurrentTagsInEachTagFile(
         this.tagDirPath,
-        this.blogDefaultUrl
+        this.blogDefaultUrl,
+        this.tagUrl
       )
 
       return next()
