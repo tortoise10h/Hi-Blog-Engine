@@ -27,7 +27,6 @@ for (let i = 0; i < editFileBtns.length; i++) {
   /** Add listener for all edit buttons to redirect to edit selected file */
   editFileBtns[i].addEventListener('click', () => {
     const markdownFile = editFileBtns[i].value
-    console.log(`markdown file: ${markdownFile}`)
-    window.location.href = `${DEFAULT_URL}/blog-edit/${markdownFile}`
+    window.location.href = `${DEFAULT_URL}/blogs-edit/${markdownFile}`
   })
 }

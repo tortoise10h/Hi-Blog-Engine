@@ -64,11 +64,7 @@ class BlogDirectoryService {
       /** Create all missing files of html directory */
       return this.createHtmlDirMissingFilesProcess(missingFilesPathList)
     } catch (error) {
-      throw new APIError(
-        httpStatus.BAD_REQUEST,
-        'Create missing file in html directory from markdown directory ERROR',
-        error
-      )
+      throw error
     }
   }
 
@@ -173,7 +169,7 @@ class BlogDirectoryService {
               reject(err)
             })
         } catch (error) {
-          throw new APIError(httpStatus.BAD_REQUEST, '', error)
+          throw error
         }
       })
 

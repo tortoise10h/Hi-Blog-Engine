@@ -3,6 +3,7 @@ section,
 .full-height {
   height: 100%;
 }
+
 /** ===== GLOBAL ===== */
 .ul-no-list-style {
   list-style: none;
@@ -28,8 +29,41 @@ section,
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.34);
 }
 
-.save-btn {
+.my-primary-background-color {
   background: #1abc9c;
+}
+
+.btn-file-action {
+  border-radius: 0.3em;
+  font-size: 0.6em;
+  border: none;
+}
+
+.btn-orange {
+  background: #ffc107;
+  color: #000;
+}
+
+.btn-orange:hover {
+  background: #b0790c;
+}
+
+.btn-red {
+  background: #c20808;
+  color: #fff;
+}
+
+.btn-red:hover {
+  background: #8a0606;
+}
+
+.btn-white {
+  background: #fff;
+  color: #000;
+}
+
+.btn-white:hover {
+  background: #a8a5a5;
 }
 
 /** ===== MENU SLIDER ===== */
@@ -140,39 +174,6 @@ section,
   color: #fff;
 }
 
-.btn-file-action {
-  border-radius: 0.3em;
-  font-size: 0.6em;
-  border: none;
-}
-
-.btn-orange {
-  background: #ffc107;
-  color: #000;
-}
-
-.btn-orange:hover {
-  background: #b0790c;
-}
-
-.btn-red {
-  background: #c20808;
-  color: #fff;
-}
-
-.btn-red:hover {
-  background: #8a0606;
-}
-
-.btn-white {
-  background: #fff;
-  color: #000;
-}
-
-.btn-white:hover {
-  background: #a8a5a5;
-}
-
 /** ===== EDITOR PAGE ===== */
 .markdown-editor {
   border: 1px solid #d9d9d9;
@@ -190,5 +191,10 @@ section,
   overflow: auto;
   border: 1px solid #d9d9d9;
   border-left: none;
-  height: 80vh;
+  height: 72vh;
+}
+
+.markdown-display img {
+  width: 100%;
+  height: auto;
 }

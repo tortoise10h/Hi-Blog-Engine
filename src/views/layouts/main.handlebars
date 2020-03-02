@@ -6,11 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Parse Markdown To HTML Engine</title>
-  <link rel="icon" type="image/icon" href="/images/shiba-with-glasses.jpg"/>
+  <link rel="icon" type="image/icon" href="/images/shiba-with-glasses.jpg" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css" />
   <link rel="stylesheet" href="/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/editor.css" />
+  <link rel="stylesheet" href="/css/emoji-dist.css" />
 </head>
 
 <body>
@@ -21,14 +22,14 @@
       <li><span class="caret-right root-directory-menu-text">All Blogs</span>
         <ul class="directory-nested ul-no-list-style">
           {{#each rootDir}}
-            <li class="white-hover">
-              {{this}}
-              <div>
-                <button class="btn-file-action btn-white btn-edit-file" value="{{this}}">Edit</button>
-                <button class="btn-file-action btn-red" value="{{this}}">Delete</button>
-                <button class="btn-file-action btn-orange" value="{{this}}">View</button>
-              </div>
-            </li>
+          <li class="white-hover">
+            {{this}}
+            <div>
+              <button class="btn-file-action btn-white btn-edit-file" value="{{this}}">Edit</button>
+              <button class="btn-file-action btn-red" value="{{this}}">Delete</button>
+              <button class="btn-file-action btn-orange" value="{{this}}">View</button>
+            </div>
+          </li>
           {{/each}}
         </ul>
       </li>
@@ -38,14 +39,15 @@
   <div id="main">
     {{!-- Successfully notification  --}}
     <div aria-live="polite" aria-atomic="true">
-      <div id="toastSuccess" class="toast" style="position: absolute; bottom: 2em; left: 2em; z-index: 100" data-delay="7000">
+      <div id="toastSuccess" class="toast" style="position: absolute; bottom: 2em; left: 2em; z-index: 100"
+        data-delay="7000">
         <div class="toast-header">
           <strong class="mr-auto">
             <i class="fas fa-check-circle" style="color: green"></i>
             &nbsp;<span id="toastSuccessTitle"></span>
           </strong>
           <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+            <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="toast-body" id="toastSuccessMessage">
@@ -55,14 +57,15 @@
 
     {{!--  Error notification  --}}
     <div aria-live="polite" aria-atomic="true">
-      <div id="toastError" class="toast" style="position: absolute; bottom: 2em; left: 2em; z-index: 100" data-delay="7000">
+      <div id="toastError" class="toast" style="position: absolute; bottom: 2em; left: 2em; z-index: 100"
+        data-delay="7000">
         <div class="toast-header">
           <strong class="mr-auto">
             <i class="fas fa-times-circle" style="color: red"></i>
             &nbsp;<span id="toastErrorTitle"></span>
           </strong>
           <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
+            <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="toast-body" id="toastErrorMessage">
@@ -70,11 +73,7 @@
       </div>
     </div>
     <div>
-      <span
-        style="font-size:25px;cursor:pointer"
-        onclick="openNav()"
-        class="menu-btn"
-      >
+      <span style="font-size:25px;cursor:pointer" onclick="openNav()" class="menu-btn">
         &#9776;
       </span>
     </div>
@@ -87,6 +86,7 @@
   <script src="/script/lib/markdown-it.js"></script>
   <script src="/script/lib/axios.js"></script>
   <script src="/script/common/initial.js"></script>
+  <script src="/script/common/helpers.js"></script>
   <script src="/script/common/my-axios.js"></script>
   <script src="/script/common/menu-slider.js"></script>
   <script src="/script/common/custom-response.js"></script>
@@ -95,5 +95,3 @@
 </body>
 
 </html>
-
-
