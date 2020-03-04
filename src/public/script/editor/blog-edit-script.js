@@ -1,7 +1,13 @@
-window.onload = () => {
-  let editor = document.getElementById('editorOfOldBlog')
-  const markdownArea = document.getElementById('markdownOfOldBlog')
+let editor = document.getElementById('editorOfOldBlog')
+const markdownArea = document.getElementById('markdownOfOldBlog')
 
+/** Scroll textarea and markdown display zone at the same time */
+const selectScrollEditor = e => {
+  markdownArea.scrollTop = editor.scrollTop
+}
+editor.addEventListener('scroll', selectScrollEditor)
+
+window.onload = () => {
   const convertTextToMarkdown = () => {
     let markdownText = editor.value
     markdownText = parseEmoji(markdownText)
