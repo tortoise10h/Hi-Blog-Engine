@@ -1,7 +1,14 @@
-window.onload = () => {
-  let editor = document.getElementById('editor')
-  const markdownArea = document.getElementById('markdown')
+const editor = document.getElementById('editor')
+const markdownArea = document.getElementById('markdown')
 
+/** Scroll textarea and markdown display zone at the same time */
+const selectScrollEditor = e => {
+  markdownArea.scrollTop = editor.scrollTop
+}
+editor.addEventListener('scroll', selectScrollEditor, false)
+
+/** Load markdown text on left side and display as html on right side */
+window.onload = () => {
   const convertTextToMarkdown = () => {
     let markdownText = editor.value
     markdownText = parseEmoji(markdownText)

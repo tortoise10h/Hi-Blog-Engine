@@ -193,8 +193,3 @@ section,
   border-left: none;
   height: 72vh;
 }
-
-.markdown-display img {
-  width: 100%;
-  height: auto;
-}
