@@ -115,7 +115,7 @@ class BlogIndexService {
 
       return blogInfoArr
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -139,7 +139,7 @@ class BlogIndexService {
 
       return deletedFiles
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -224,7 +224,7 @@ class BlogIndexService {
         homePageHtmlContent
       )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -250,7 +250,7 @@ class BlogIndexService {
         JSON.stringify(indexConfigObject)
       )
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -269,7 +269,7 @@ class BlogIndexService {
 
       return blogInfoArray
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
     }
   }
 
@@ -299,11 +299,7 @@ class BlogIndexService {
         )
       ])
     } catch (error) {
-      throw new APIError(
-        httpStatus.BAD_REQUEST,
-        'Remove blog link from index error',
-        error
-      )
+      throw error
     }
   }
 

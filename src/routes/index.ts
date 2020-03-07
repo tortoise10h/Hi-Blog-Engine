@@ -71,36 +71,6 @@ router
       blogController.renderEditorPage(req, res, next)
     }
   )
-  /** Edit blog api */
-  .put(
-    (req: any, res: Response, next: NextFunction) => {
-      blogController.editBlog(req, res, next)
-    },
-    (req: any, res: Response, next: NextFunction) => {
-      tagController.handleTagsOfBlogEdit(req, res, next)
-    },
-    (req: any, res: Response, next: NextFunction) => {
-      tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
-    },
-    (req: any, res: Response, next: NextFunction) => {
-      blogDirectoryController.updateIndexHtmlAfterUpdateBlog(req, res, next)
-    }
-  )
-  /** Delete blog api */
-  .delete(
-    (req: any, res: Response, next: NextFunction) => {
-      blogController.deleteBlog(req, res, next)
-    },
-    (req: any, res: Response, next: NextFunction) => {
-      tagController.removeDeletedBlogLinkFromTag(req, res, next)
-    },
-    (req: any, res: Response, next: NextFunction) => {
-      tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
-    },
-    (req: any, res: Response, next: NextFunction) => {
-      blogDirectoryController.removeDeletedBlogLinkFromIndexFile(req, res, next)
-    }
-  )
 
 /** Save new blog */
 router.route('/blogs').post(
@@ -120,6 +90,34 @@ router.route('/blogs').post(
     blogDirectoryController.generateIndexHtmlFileWithNewBlog(req, res, next)
   }
 )
+
+router
+  .route('/blogs/:markdownFile')
+  .put(
+    (req: any, res: Response, next: NextFunction) => {
+      blogController.editBlog(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      tagController.handleTagsOfBlogEdit(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      blogDirectoryController.updateIndexHtmlAfterUpdateBlog(req, res, next)
+    }
+  )
+  .delete(
+    (req: any, res: Response, next: NextFunction) => {
+      blogController.deleteBlog(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      tagController.removeDeletedBlogLinkFromTag(req, res, next)
+    },
+    (req: any, res: Response, next: NextFunction) => {
+      blogDirectoryController.removeDeletedBlogLinkFromIndexFile(req, res, next)
+    }
+  )
 
 /** Handle unknow route */
 router.get('*', (req: Request, res: Response) => {

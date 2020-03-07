@@ -55,7 +55,7 @@ saveBlogChangeBtn.addEventListener('click', async () => {
     /** Request to server to save file change */
     const myAxios = new MyAxios()
     const result = await myAxios.fetch({
-      url: `${DEFAULT_URL}/blogs-edit/${editFile}`,
+      url: `${DEFAULT_URL}/blogs/${editFile}`,
       method: 'PUT',
       data: {
         markdownContent,
@@ -76,7 +76,34 @@ saveBlogChangeBtn.addEventListener('click', async () => {
     window.location.href = `${DEFAULT_URL}`
   } catch (error) {
     if (error.response) {
-      console.log('============> Huy Debugs :>: error.response', error.response)
+      const { data } = error.response
+      const { message } = data
+      ClientResponse.errorToast('Save file error', message)
+    } else {
+      console.log('====> error', error)
+      ClientResponse.errorToast('Save file error', 'Server error')
+    }
+  }
+})
+
+/** When confirm delete blog */
+
+const confirmDeleteBlogBtn = document.getElementById('confirmDeleteBlogBtn')
+confirmDeleteBlogBtn.addEventListener('click', async () => {
+  try {
+    const markdownFile = confirmDeleteBlogBtn.value
+
+    /** Request to server to save file change */
+    const myAxios = new MyAxios()
+    await myAxios.fetch({
+      url: `${DEFAULT_URL}/blogs/${markdownFile}`,
+      method: 'DELETE',
+      data: {}
+    })
+
+    window.location.href = `${DEFAULT_URL}`
+  } catch (error) {
+    if (error.response) {
       const { data } = error.response
       const { message } = data
       ClientResponse.errorToast('Save file error', message)

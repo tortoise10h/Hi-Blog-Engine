@@ -64,16 +64,35 @@
 }
 
 .markdown-display h2 {
-  color: #17a2b8;
-  font-size: 1.5em;
+  counter-reset: thirdHeader;
 }
-.markdown-display h3 {
-  color: #a23b72;
-  font-size: 1.2em;
+
+/* Before custom */
+.markdown-display h2::before {
+  content: '#';
+  display: inline-block;
+  position: relative;
+  left: -10px;
+  color: #ccc;
+  font-family: 'roboto-regular';
 }
-.markdown-display h4 {
-  color: #c73e1d;
-  font-size: 1em;
+.markdown-display h3::before {
+  counter-increment: thirdHeader;
+  content: counter(thirdHeader) '. ';
+  display: inline-block;
+  position: relative;
+  left: -10px;
+  color: #ccc;
+  font-family: 'roboto-regular';
+}
+.main-content h4::before {
+  content: '\25CB';
+  display: inline-block;
+  position: relative;
+  margin-left: 0.3em;
+  left: -10px;
+  color: #ccc;
+  font-family: 'roboto-regular';
 }
 
 /* ===== HIGHLIGHTJS ===== */

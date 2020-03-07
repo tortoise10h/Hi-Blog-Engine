@@ -144,14 +144,39 @@ class TagService {
         encoding: 'utf-8'
       })
       const configObject = JSON.parse(configContent)
-      configObject.blogs.push({
-        ...blogConfigInTag
-      })
+
+      configObject.blogs = this.handleAddNewBlogConfigToBlogConfigArray(
+        blogConfigInTag,
+        configObject.blogs
+      )
 
       return FileDirHelpers.writeFilePromise(
         tagJSONConfigPath,
         JSON.stringify(configObject)
       )
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public handleAddNewBlogConfigToBlogConfigArray(
+    blogConfigInTag: IBlogConfigInTag,
+    blogConfigArray: Array<IBlogConfigInTag>
+  ): Array<IBlogConfigInTag> {
+    try {
+      const blogConfigPosition: number = blogConfigArray.findIndex(
+        (blog: IBlogConfigInTag) => blog.blogLink === blogConfigInTag.blogLink
+      )
+
+      if (blogConfigPosition !== -1) {
+        blogConfigArray[blogConfigPosition] = blogConfigInTag
+      } else {
+        blogConfigArray.push(blogConfigInTag)
+      }
+
+      MyCustomHelpers.logObjectDetail(blogConfigArray, 'blogConfigArray')
+
+      return blogConfigArray
     } catch (error) {
       throw error
     }
@@ -192,23 +217,23 @@ class TagService {
 
   public updateAllCurrentTagsInEachTagFile(
     tagDirPath: string,
-    blogDefaultUrl: string,
     tagUrl: string
   ): Promise<any> {
     try {
-      const tagHtmlFiles: Array<string> = fs.readdirSync(
+      const allHtmlTagFiles: Array<string> = fs.readdirSync(
         path.join(tagDirPath, constants.TAG_HTML_DIR_NAME)
       )
-      const tagsName: Array<string> = tagHtmlFiles.map((tagFile: string) => {
+
+      const tagsName: Array<string> = allHtmlTagFiles.map((tagFile: string) => {
         return FileDirHelpers.changeFileExtension(tagFile, '.html', '')
       })
-      const tagsHtmlPath: Array<string> = tagHtmlFiles.map(tagFile =>
+      const tagsHtmlPath: Array<string> = allHtmlTagFiles.map(tagFile =>
         path.join(tagDirPath, constants.TAG_HTML_DIR_NAME, tagFile)
       )
-      const tagsUrl: Array<string> = tagHtmlFiles.map(tagFile =>
+      const tagsUrl: Array<string> = allHtmlTagFiles.map(tagFile =>
         path.join(tagUrl, tagFile)
       )
-      const tagsConfigPath: Array<string> = tagHtmlFiles.map(tagFile => {
+      const tagsConfigPath: Array<string> = allHtmlTagFiles.map(tagFile => {
         const tagConfigFile = FileDirHelpers.changeFileExtension(
           tagFile,
           '.html',
@@ -222,7 +247,7 @@ class TagService {
       })
 
       const allCurrentTagsHtml: string = this.createAllCurrentTagsHtml(
-        tagHtmlFiles,
+        allHtmlTagFiles,
         tagsName,
         tagsUrl
       )
@@ -238,7 +263,7 @@ class TagService {
           )
 
           /** Append all current tag to each tag new html data */
-          tagNewHtmlData = BlogUITemplate.addContentsToTemplate(
+          const data: string = BlogUITemplate.addContentsToTemplate(
             tagNewHtmlData,
             [
               {
@@ -249,7 +274,7 @@ class TagService {
           )
 
           return {
-            tagNewHtmlData,
+            tagNewHtmlData: data,
             tagFilePath: tagsHtmlPath[index]
           }
         }
@@ -337,7 +362,15 @@ class TagService {
 
       /** Push new blog config object to blog config object array
        * to map them and create new tag html table content */
-      tagJSONObject.blogs.push(blogConfigInTag)
+      const blogConfigInTagPosition: number = tagJSONObject.blogs.findIndex(
+        (blog: IBlogConfigInTag) => blog.blogLink === blogConfigInTag.blogLink
+      )
+      if (blogConfigInTagPosition === -1) {
+        tagJSONObject.blogs.push(blogConfigInTag)
+      } else {
+        tagJSONObject.blogs[blogConfigInTagPosition] = blogConfigInTag
+      }
+
       /** Sort blog ascending by date */
       tagJSONObject.blogs = this.sortBlogConfigArrAscending(tagJSONObject.blogs)
 
@@ -402,11 +435,21 @@ class TagService {
 
   public getTagFileConfigObject(tagConfigFilePath: string) {
     try {
-      const tagJSONContent: string = fs.readFileSync(tagConfigFilePath, {
-        encoding: 'utf-8'
-      })
-
-      const tagJSONObject = JSON.parse(tagJSONContent)
+      let tagJSONObject: any = {
+        blogs: []
+      }
+      if (FileDirHelpers.isFileExisted(tagConfigFilePath)) {
+        const tagJSONContent: string = fs.readFileSync(tagConfigFilePath, {
+          encoding: 'utf-8'
+        })
+        if (!tagJSONContent) {
+          tagJSONObject = {
+            blogs: []
+          }
+        } else {
+          tagJSONObject = JSON.parse(tagJSONContent)
+        }
+      }
 
       return tagJSONObject
     } catch (error) {
@@ -456,11 +499,9 @@ class TagService {
   ): Promise<any> {
     try {
       /**
-       * - newTags to add blog link to those tags (or create new tag if it's not exist)
        * - oldTags to remove blog link from those tags
-       * - stableTags to update new info to those tags
        */
-      const { newTags, oldTags, stableTags } = this.classifyTagsOfBlogEdit(
+      const { oldTags } = this.classifyTagsOfBlogEdit(
         newMetadataObject,
         oldMetaDataObject
       )
@@ -472,20 +513,11 @@ class TagService {
           tagDirPath,
           tagUrl
         ),
-        this.writeBlogLinkToBlogNewTagProcess(
-          newTags,
+        this.writeBlogLinkToBlogNewAndCurrentTagsProcess(
           blogDefaultUrl,
           newMetadataObject,
           tagDirPath,
           htmlFile,
-          tagUrl,
-          minRead
-        ),
-        this.updateBlogInfoInStableTagsConfigProcess(
-          stableTags,
-          blogLink,
-          newMetadataObject,
-          tagDirPath,
           tagUrl,
           minRead
         )
@@ -586,8 +618,7 @@ class TagService {
     return tagJSONObject
   }
 
-  public writeBlogLinkToBlogNewTagProcess(
-    blogNewTags: Array<string>,
+  public writeBlogLinkToBlogNewAndCurrentTagsProcess(
     blogDefaultUrl: string,
     newMetadataObject: IMarkdownMetaDataObject,
     tagDirPath: string,
@@ -603,7 +634,7 @@ class TagService {
       // clone newMetadataObject to metaDatObject to replace tags array to prevent effect on original
       // newMetadataObject to use at the next middleware
       const metaDatObject = _.clone(newMetadataObject)
-      metaDatObject.tags = blogNewTags
+      MyCustomHelpers.logObjectDetail(metaDatObject, 'newMetadataObject')
 
       return this.saveNewBlogLinkToTags(
         blogDefaultUrl,
@@ -655,7 +686,10 @@ class TagService {
 
       const tagJSONObject = this.getTagFileConfigObject(tagConfigFilePath)
 
-      this.removeBlogLinkFromTagConfigObject(tagJSONObject, blogLink)
+      tagJSONObject.blogs = this.removeBlogLinkFromTagConfigObject(
+        tagJSONObject.blogs,
+        blogLink
+      )
 
       /** Generate new html content for tag file without deleted blog link */
       const tagHtmlFileData: string = this.createTagHtmlFileData(
@@ -679,17 +713,15 @@ class TagService {
   }
 
   public removeBlogLinkFromTagConfigObject(
-    tagJSONObject: any,
+    blogsInfoArray: Array<IBlogConfigInTag>,
     blogLink: string
   ) {
     try {
-      /** Find blog which has link same with the link need to remove in config object and eliminate it */
-      tagJSONObject.blogs.splice(
-        tagJSONObject.blogs.findIndex(
-          (blog: IBlogConfigInTag) => blog.blogLink === blogLink
-        ),
-        1
+      const result: Array<IBlogConfigInTag> = blogsInfoArray.filter(
+        (blog: IBlogConfigInTag) => blog.blogLink !== blogLink
       )
+
+      return result
     } catch (error) {
       throw error
     }

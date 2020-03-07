@@ -6,6 +6,7 @@ import FileDirHelpers from '../helpers/file-dir-helpers'
 import { IMarkdownMetaDataObject } from '../services/html-markdown.service'
 import constants from '../common/constants'
 import APIResponse from '../helpers/api-response'
+import MyCustomHelpers from '../helpers/my-custom-helpers'
 
 class TagController {
   private readonly blogDefaultUrl: string
@@ -131,7 +132,6 @@ class TagController {
     try {
       await TagService.updateAllCurrentTagsInEachTagFile(
         this.tagDirPath,
-        this.blogDefaultUrl,
         this.tagUrl
       )
 
