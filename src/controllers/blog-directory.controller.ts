@@ -198,6 +198,18 @@ class BlogDirectoryController {
       return next(error)
     }
   }
+
+  public renderWritingPage(req: any, res: Response, next: NextFunction) {
+    try {
+      const { rootDir } = req
+
+      res.render('editor', {
+        rootDir
+      })
+    } catch (error) {
+      return next(error)
+    }
+  }
 }
 
 export default BlogDirectoryController

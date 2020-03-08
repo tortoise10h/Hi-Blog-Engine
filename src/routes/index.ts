@@ -3,6 +3,7 @@ import path from 'path'
 import constants from '../common/constants'
 import Config from '../common/config'
 import APIError from '../helpers/api-error'
+import APIReponse from '../helpers/api-response'
 import BlogController from '../controllers/blog.controller'
 import BlogDirectoryController from '../controllers/blog-directory.controller'
 import TagController from '../controllers/tag.controller'
@@ -52,11 +53,7 @@ router.route('/').get(
     blogDirectoryController.getAllMarkdownFiles(req, res, next)
   },
   (req: any, res: Response, next: NextFunction) => {
-    const { rootDir } = req
-
-    res.render('editor', {
-      rootDir
-    })
+    blogDirectoryController.renderWritingPage(req, res, next)
   }
 )
 
@@ -118,6 +115,15 @@ router
       blogDirectoryController.removeDeletedBlogLinkFromIndexFile(req, res, next)
     }
   )
+
+router.route('/tags/current-tags').put(
+  (req: any, res: Response, next: NextFunction) => {
+    tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
+  },
+  (req: any, res: Response, next: NextFunction) => {
+    return APIReponse.success(res, 'Update current tag success')
+  }
+)
 
 /** Handle unknow route */
 router.get('*', (req: Request, res: Response) => {

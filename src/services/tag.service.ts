@@ -272,7 +272,6 @@ class TagService {
               }
             ]
           )
-
           return {
             tagNewHtmlData: data,
             tagFilePath: tagsHtmlPath[index]

@@ -1,23 +1,26 @@
 <!-- Button trigger modal -->
 
 <!-- Modal -->
-<div class="modal fade" id="deleteBlogConfirmModal" tabindex="-1" role="dialog" aria-labelledby="deleteBlogConfirmModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteBlogConfirmModal" tabindex="-1" role="dialog"
+  aria-labelledby="deleteBlogConfirmModalLabel" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="deleteBlogConfirmModalLabel">Are you sure to delete this blog?</h5>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-        <span aria-hidden="true">&times;</span>
+          <span aria-hidden="true">&times;</span>
         </button>
       </div>
       <div class="modal-body">
-        <p>If you confirm delete this blog then I will remove both html and markdown file. And I will also remove this blog link from tag and home page at the same time.</p>
+        <p>If you confirm delete this blog then both html and markdown file are removed. And this blog link from tag
+          page & home page will removed also.</p>
       </div>
       <div class="modal-footer">
-        <button id="confirmDeleteBlogBtn" type="button" class="btn btn-danger rounded-btn" value="{{markdownFile}}">Confirm Delete Blog</button>
+        <button id="confirmDeleteBlogBtn" type="button" class="btn btn-danger rounded-btn"
+          value="{{markdownFile}}">Confirm Delete Blog</button>
       </div>
-</div>
-</div>
+    </div>
+  </div>
 </div>
 
 {{!--  Blog meta data zone  --}}
@@ -65,7 +68,8 @@
   <div class="col-md-6 full-height markdown-display" id="markdownOfOldBlog"></div>
 </section>
 <div class="float-right py-3 px-2">
-  <button id="deleteBlogBtn" type="button" class="btn btn-danger rounded-btn" data-toggle="modal" data-target="#deleteBlogConfirmModal">
+  <button id="deleteBlogBtn" type="button" class="btn btn-danger rounded-btn" data-toggle="modal"
+    data-target="#deleteBlogConfirmModal">
     Delete
   </button>
   <button id="saveBlogChangeBtn" type="button" class="btn btn-info rounded-btn">

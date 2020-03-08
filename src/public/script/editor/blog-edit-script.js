@@ -100,6 +100,11 @@ confirmDeleteBlogBtn.addEventListener('click', async () => {
       method: 'DELETE',
       data: {}
     })
+    await myAxios.fetch({
+      url: `${DEFAULT_URL}/tags/current-tags`,
+      method: 'PUT',
+      data: {}
+    })
 
     window.location.href = `${DEFAULT_URL}`
   } catch (error) {
