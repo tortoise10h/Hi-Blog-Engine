@@ -3,10 +3,12 @@ import path from 'path'
 import httpStatus from 'http-status'
 import util from 'util'
 import _ from 'lodash'
+import constants from '../common/constants'
 import APIError from '../helpers/api-error'
 
 const mkdirAsync = util.promisify(fs.mkdir)
 const writeFileAsync = util.promisify(fs.writeFile)
+const unlinkAsync = util.promisify(fs.unlink)
 
 interface ValidBlogDirectoryCheckerReturn {
   isOk: boolean
@@ -128,7 +130,130 @@ class FileDirHelpers {
           })
       })
     } catch (error) {
-      throw new APIError(httpStatus.BAD_REQUEST, '', error)
+      throw error
+    }
+  }
+
+  public isFilePrivate(blogRootPath: string, markdownFile: string): boolean {
+    try {
+      const pathInPrivateDir: string = path.join(
+        blogRootPath,
+        constants.PRIVATE_DIR_NAME,
+        constants.MARKDOWN_DIR_NAME,
+        markdownFile
+      )
+
+      if (this.isFileExisted(pathInPrivateDir)) {
+        return true
+      }
+      return false
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public getOldBlogHtmlAndMarkdownPath(
+    markdownFile: string,
+    blogRootPath: string
+  ) {
+    try {
+      const markdownFilePath: string = path.join(
+        blogRootPath,
+        constants.MARKDOWN_DIR_NAME,
+        markdownFile
+      )
+      const htmlFile = this.changeFileExtension(markdownFile, '.md', '.html')
+
+      if (this.isFileExisted(markdownFilePath)) {
+        // if file is existed that mean publish mode of file is not private
+        return {
+          markdownFilePath,
+          htmlFilePath: path.join(
+            blogRootPath,
+            constants.HTML_DIR_NAME,
+            htmlFile
+          )
+        }
+      }
+
+      // if pass if statement above that's mean publish mode is private
+      return {
+        markdownFilePath: path.join(
+          blogRootPath,
+          constants.PRIVATE_DIR_NAME,
+          constants.MARKDOWN_DIR_NAME,
+          markdownFile
+        ),
+        htmlFilePath: path.join(
+          blogRootPath,
+          constants.PRIVATE_DIR_NAME,
+          constants.HTML_DIR_NAME,
+          htmlFile
+        )
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public createHtmlAndMarkdownFilePathByPublishMode(
+    publishMode: string,
+    blogRootPath: string,
+    markdownFile: string,
+    htmlFile: string
+  ) {
+    try {
+      let markdownFilePath: string = ''
+      let htmlFilePath: string = ''
+
+      if (publishMode === constants.PUBLISH_MODES.PRIVATE) {
+        // if publish mode is private then create file location inside private folder
+        markdownFilePath = path.join(
+          blogRootPath,
+          constants.PRIVATE_DIR_NAME,
+          constants.MARKDOWN_DIR_NAME,
+          markdownFile
+        )
+        htmlFilePath = path.join(
+          blogRootPath,
+          constants.PRIVATE_DIR_NAME,
+          constants.HTML_DIR_NAME,
+          htmlFile
+        )
+      } else {
+        // different private then just locate file in normal directory
+        markdownFilePath = path.join(
+          blogRootPath,
+          constants.MARKDOWN_DIR_NAME,
+          markdownFile
+        )
+        htmlFilePath = path.join(
+          blogRootPath,
+          constants.HTML_DIR_NAME,
+          htmlFile
+        )
+      }
+
+      return {
+        markdownFilePath,
+        htmlFilePath
+      }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public removeFilePromise(filePath: string) {
+    try {
+      return new Promise(resolve => {
+        unlinkAsync(filePath)
+          .then(() => resolve({ isOk: 'ok' }))
+          .catch(err => {
+            throw err
+          })
+      })
+    } catch (error) {
+      throw error
     }
   }
 }

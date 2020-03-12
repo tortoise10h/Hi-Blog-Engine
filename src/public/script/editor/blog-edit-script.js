@@ -22,6 +22,22 @@ window.onload = () => {
   convertTextToMarkdown()
 }
 
+/** Handle press publish mode dropdown */
+const publishModeDropdown = document.getElementById(
+  'oldBlogPublishModeDropdown'
+)
+const publishModeItems = document.getElementsByClassName(
+  'old-blog-publish-mode-item'
+)
+for (let i = 0; i < publishModeItems.length; i++) {
+  publishModeItems[i].addEventListener('click', () => {
+    /** Change value of publish mode dropdown when click in each different dropdown item */
+    const publishModeValue = publishModeItems[i].value
+    publishModeDropdown.innerText = publishModeValue
+    publishModeDropdown.value = publishModeValue
+  })
+}
+
 const saveBlogChangeBtn = document.getElementById('saveBlogChangeBtn')
 /** When press save change button */
 saveBlogChangeBtn.addEventListener('click', async () => {
@@ -30,8 +46,8 @@ saveBlogChangeBtn.addEventListener('click', async () => {
     const blogTitleInput = document.getElementById('oldBlogTitle')
     const blogDateInput = document.getElementById('oldBlogDate')
     const blogTagsInput = document.getElementById('oldBlogTags')
-    const blogPublishModeSelect = document.getElementById(
-      'oldPublishModeSelect'
+    const blogPublishModeDropdown = document.getElementById(
+      'oldBlogPublishModeDropdown'
     )
 
     /** Check fields empty */
@@ -49,7 +65,7 @@ saveBlogChangeBtn.addEventListener('click', async () => {
     const blogTitle = blogTitleInput.value
     const blogDate = blogDateInput.value || new Date()
     const blogTags = blogTagsInput.value
-    const blogPublishMode = blogPublishModeSelect.value
+    const blogPublishMode = blogPublishModeDropdown.value
     const blogTagsArray = parseBlogTagsValueToArray(blogTags)
 
     /** Request to server to save file change */
@@ -67,6 +83,11 @@ saveBlogChangeBtn.addEventListener('click', async () => {
           publishMode: blogPublishMode
         }
       }
+    })
+    await myAxios.fetch({
+      url: `${DEFAULT_URL}/tags/current-tags`,
+      method: 'PUT',
+      data: {}
     })
     /** Response to user */
     const { data } = result
@@ -87,7 +108,6 @@ saveBlogChangeBtn.addEventListener('click', async () => {
 })
 
 /** When confirm delete blog */
-
 const confirmDeleteBlogBtn = document.getElementById('confirmDeleteBlogBtn')
 confirmDeleteBlogBtn.addEventListener('click', async () => {
   try {

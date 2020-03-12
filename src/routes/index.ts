@@ -98,9 +98,6 @@ router
       tagController.handleTagsOfBlogEdit(req, res, next)
     },
     (req: any, res: Response, next: NextFunction) => {
-      tagController.updateAllCurrentTagsInEachTagFile(req, res, next)
-    },
-    (req: any, res: Response, next: NextFunction) => {
       blogDirectoryController.updateIndexHtmlAfterUpdateBlog(req, res, next)
     }
   )

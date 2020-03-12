@@ -51,11 +51,17 @@
         </div>
         <div class="col-md-4">
           <label>Publish Mode</label>
-          <select id="publishModeSelect" class="custom-select">
-            <option value="publish">Publish</option>
-            <option value="private">Private</option>
-            <option value="none-publish">None publish</option>
-          </select>
+          <div class="dropdown">
+            <button value="publish" class="btn btn-default dropdown-toggle" type="button" id="blogPublishModeDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border: 1px solid #ced4da; background: #fff">
+              Publish
+            </button>
+            <div class="dropdown-menu" aria-labelledby="blogPublishModeDropdown">
+              <button value="publish" class="dropdown-item blog-publish-mode-item">Publish</button>
+              <button value="non-publish" class="dropdown-item blog-publish-mode-item">Non-publish</button>
+              <button value="private" class="dropdown-item blog-publish-mode-item">Private</button>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </div>

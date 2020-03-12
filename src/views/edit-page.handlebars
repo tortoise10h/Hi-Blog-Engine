@@ -52,11 +52,16 @@
         </div>
         <div class="col-md-4">
           <label>Publish Mode</label>
-          <select id="oldPublishModeSelect" class="custom-select">
-            <option value="publish">Publish</option>
-            <option value="private">Private</option>
-            <option value="none-publish">None publish</option>
-          </select>
+          <div class="dropdown">
+            <button value="{{metaDataObject.publishMode}}" class="btn btn-default dropdown-toggle" type="button" id="oldBlogPublishModeDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="border: 1px solid #ced4da; background: #fff">
+              {{metaDataObject.publishMode}}
+            </button>
+            <div class="dropdown-menu" aria-labelledby="publishModeDropdowoldBlogP">
+              <button value="publish" class="dropdown-item old-blog-publish-mode-item">Publish</button>
+              <button value="non-publish" class="dropdown-item old-blog-publish-mode-item">Non-publish</button>
+              <button value="private" class="dropdown-item old-blog-publish-mode-item">Private</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

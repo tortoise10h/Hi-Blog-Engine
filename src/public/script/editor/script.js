@@ -23,6 +23,20 @@ window.onload = () => {
   convertTextToMarkdown()
 }
 
+/** Handle press publish mode dropdown */
+const publishModeItems = document.getElementsByClassName(
+  'blog-publish-mode-item'
+)
+for (let i = 0; i < publishModeItems.length; i++) {
+  const publishModeDropdown = document.getElementById('blogPublishModeDropdown')
+  publishModeItems[i].addEventListener('click', () => {
+    /** Change value of publish mode dropdown when click in each different dropdown item */
+    const publishModeValue = publishModeItems[i].value
+    publishModeDropdown.innerText = publishModeValue
+    publishModeDropdown.value = publishModeValue
+  })
+}
+
 /** Get elements */
 const saveBlogButton = document.getElementById('saveBlogBtn')
 const infoSavePopupBackground = document.getElementById(
@@ -44,7 +58,19 @@ saveBlogButton.addEventListener('click', () => {
     return
   }
 
+  /** Validate tag format */
+  if (/^([\w+]|([\w+],[\w+]))*$/.test(blogTagsInput.value) === false) {
+    document.getElementById('blogTagsAlert').style.color = 'red'
+    document.getElementById('blogTagsAlert').innerText =
+      'Please enter correct format: each tag has no space and split each other by comma (,). No comma and the end'
+    window.scrollTo(0, 0)
+    blogTagsInput.focus()
+    return
+  }
+
   $('#saveBlogModal').modal('show')
+  /** Focus file name box when save blog modal open */
+  document.getElementById('newFileName').focus()
 })
 
 /** When press confirm save */
@@ -56,7 +82,9 @@ confirmSaveBtn.addEventListener('click', async () => {
     const blogTitleInput = document.getElementById('blogTitle')
     const blogDateInput = document.getElementById('blogDate')
     const blogTagsInput = document.getElementById('blogTags')
-    const blogPublishModeSelect = document.getElementById('publishModeSelect')
+    const blogPublishModeDropdown = document.getElementById(
+      'blogPublishModeDropdown'
+    )
 
     const newFileName = newFileNameBox.value
     let markdownContent = editor.value
@@ -65,7 +93,7 @@ confirmSaveBtn.addEventListener('click', async () => {
     const blogTitle = blogTitleInput.value
     const blogDate = blogDateInput.value || new Date()
     const blogTags = blogTagsInput.value
-    const blogPublishMode = blogPublishModeSelect.value
+    const blogPublishMode = blogPublishModeDropdown.value
     const blogTagsArray = parseBlogTagsValueToArray(blogTags)
 
     /** Check file name */
