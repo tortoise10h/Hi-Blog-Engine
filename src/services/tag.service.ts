@@ -91,8 +91,22 @@ class TagService {
           blogConfigInTag
         )
 
+        /** If blog publish mode is note private then
+         * save new blog to tag config and create new html content for tag
+         * */
+        if (metaDataObject.publishMode !== constants.PUBLISH_MODES.PRIVATE) {
+          return Promise.all([
+            FileDirHelpers.writeFilePromise(tagFilePath, tagData),
+            this.checkAndWriteTagConfigFileDown(
+              blogConfigInTag,
+              tagJSONConfigPath
+            )
+          ])
+        }
+        /** If blog publish mode is private then just save blog to config but
+         * not generate new html content for tag
+         */
         return Promise.all([
-          FileDirHelpers.writeFilePromise(tagFilePath, tagData),
           this.checkAndWriteTagConfigFileDown(
             blogConfigInTag,
             tagJSONConfigPath
@@ -174,8 +188,6 @@ class TagService {
         blogConfigArray.push(blogConfigInTag)
       }
 
-      MyCustomHelpers.logObjectDetail(blogConfigArray, 'blogConfigArray')
-
       return blogConfigArray
     } catch (error) {
       throw error
@@ -256,8 +268,11 @@ class TagService {
       const tagsInfo = tagsConfigPath.map(
         (configPath: string, index: number) => {
           const tagConfigObject = this.getTagFileConfigObject(configPath)
+          const publishBlogs = this.getOnlyPublishBlogsConfig(
+            tagConfigObject.blogs
+          )
           let tagNewHtmlData = this.createTagHtmlFileData(
-            tagConfigObject.blogs,
+            publishBlogs,
             tagsName[index],
             tagUrl
           )
@@ -312,17 +327,21 @@ class TagService {
   ) {
     try {
       let newTagFileContent: string = BlogUITemplate.getTagFileTemplate()
-      const blogOfTagTags: string = BlogHtmlElementTemplate.createBlogOfTagTags(
-        blogConfigInTag.tags,
-        tagUrl
-      )
-      const htmlLinkElement: string = BlogHtmlElementTemplate.createTagBlogLink(
-        blogConfigInTag.blogLink,
-        blogConfigInTag.title,
-        blogConfigInTag.date,
-        blogOfTagTags,
-        blogConfigInTag.minRead
-      )
+      let htmlLinkElement: string = ''
+      if (blogConfigInTag.publishMode !== constants.PUBLISH_MODES.PRIVATE) {
+        /** If blog is not private then create html link */
+        const blogOfTagTags: string = BlogHtmlElementTemplate.createBlogOfTagTags(
+          blogConfigInTag.tags,
+          tagUrl
+        )
+        htmlLinkElement = BlogHtmlElementTemplate.createTagBlogLink(
+          blogConfigInTag.blogLink,
+          blogConfigInTag.title,
+          blogConfigInTag.date,
+          blogOfTagTags,
+          blogConfigInTag.minRead
+        )
+      }
 
       newTagFileContent = BlogUITemplate.addContentsToTemplate(
         newTagFileContent,
@@ -370,11 +389,15 @@ class TagService {
         tagJSONObject.blogs[blogConfigInTagPosition] = blogConfigInTag
       }
 
+      /** Only use publish blog to show */
+      let publishBlogs: Array<IBlogConfigInTag> = this.getOnlyPublishBlogsConfig(
+        tagJSONObject.blogs
+      )
       /** Sort blog ascending by date */
-      tagJSONObject.blogs = this.sortBlogConfigArrAscending(tagJSONObject.blogs)
+      publishBlogs = this.sortBlogConfigArrAscending(publishBlogs)
 
       const tagFileTemplate: string = this.createTagHtmlFileData(
-        tagJSONObject.blogs,
+        publishBlogs,
         tag,
         tagUrl
       )
@@ -393,6 +416,21 @@ class TagService {
     })
 
     return result
+  }
+
+  public getOnlyPublishBlogsConfig(
+    blogConfigArray: Array<IBlogConfigInTag>
+  ): Array<IBlogConfigInTag> {
+    try {
+      const result: Array<IBlogConfigInTag> = blogConfigArray.filter(
+        (blog: IBlogConfigInTag) =>
+          blog.publishMode === constants.PUBLISH_MODES.PUBLISH
+      )
+
+      return result
+    } catch (error) {
+      throw error
+    }
   }
 
   public createTagHtmlFileData(
@@ -633,7 +671,6 @@ class TagService {
       // clone newMetadataObject to metaDatObject to replace tags array to prevent effect on original
       // newMetadataObject to use at the next middleware
       const metaDatObject = _.clone(newMetadataObject)
-      MyCustomHelpers.logObjectDetail(metaDatObject, 'newMetadataObject')
 
       return this.saveNewBlogLinkToTags(
         blogDefaultUrl,
@@ -691,8 +728,10 @@ class TagService {
       )
 
       /** Generate new html content for tag file without deleted blog link */
+      // only genereate with publish blogs
+      const publishBlogs = this.getOnlyPublishBlogsConfig(tagJSONObject.blogs)
       const tagHtmlFileData: string = this.createTagHtmlFileData(
-        tagJSONObject.blogs,
+        publishBlogs,
         tag,
         tagUrl
       )
@@ -727,14 +766,14 @@ class TagService {
   }
 
   public removeDeletedBlogLinkFromTags(
-    tags: Array<string>,
+    metaDatObject: IMarkdownMetaDataObject,
     tagDirPath: string,
     blogLink: string,
     tagUrl: string
   ): Promise<any> {
     try {
       return this.removeBlogLinkFromBlogOldTagsProcess(
-        tags,
+        metaDatObject.tags,
         blogLink,
         tagDirPath,
         tagUrl

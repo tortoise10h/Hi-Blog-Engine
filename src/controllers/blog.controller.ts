@@ -53,8 +53,13 @@ class BlogController {
 
       /** Check files exist or not */
       const {
-        markdownPath
-      } = HtmlAndMarkdownService.createHtmlandMarkdownPaths(newFileName)
+        markdownPath,
+        htmlPath
+      } = this.createNewHtmlAndMarkdownFilePathByPublishMode(
+        newFileName,
+        blogPublishMode
+      )
+
       if (FileDirHelpers.isFileExisted(markdownPath)) {
         return next(
           new APIError(httpStatus.BAD_REQUEST, 'file name is already existed')
@@ -63,13 +68,16 @@ class BlogController {
 
       /** Save html & markdown path */
       await HtmlAndMarkdownService.saveMarkdownandHtmlFileProcess(
-        newFileName,
+        htmlPath,
+        markdownPath,
         htmlContent,
         markdownContent,
-        blogTagsArray,
-        blogTitle,
-        blogPublishMode,
-        blogDate,
+        {
+          tags: blogTagsArray,
+          title: blogTitle,
+          publishMode: blogPublishMode,
+          date: blogDate
+        },
         blogHomePageLink,
         tagUrl
       )
@@ -89,11 +97,51 @@ class BlogController {
     }
   }
 
+  public createNewHtmlAndMarkdownFilePathByPublishMode(
+    newFileName: string,
+    publishMode: string
+  ) {
+    let htmlPath: string
+    let markdownPath: string
+    if (publishMode === constants.PUBLISH_MODES.PRIVATE) {
+      htmlPath = path.join(
+        this.blogRootPath,
+        constants.PRIVATE_DIR_NAME,
+        constants.HTML_DIR_NAME,
+        `${newFileName}.html`
+      )
+      markdownPath = path.join(
+        this.blogRootPath,
+        constants.PRIVATE_DIR_NAME,
+        constants.MARKDOWN_DIR_NAME,
+        `${newFileName}.md`
+      )
+    } else {
+      htmlPath = path.join(
+        this.blogRootPath,
+        constants.HTML_DIR_NAME,
+        `${newFileName}.html`
+      )
+      markdownPath = path.join(
+        this.blogRootPath,
+        constants.MARKDOWN_DIR_NAME,
+        `${newFileName}.md`
+      )
+    }
+    return {
+      htmlPath,
+      markdownPath
+    }
+  }
+
   public renderEditorPage(req: any, res: Response, next: NextFunction) {
     try {
       const { markdownFile } = req.params
       const { rootDir } = req
-      const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
+      const { markdownFilePath } = FileDirHelpers.getOldBlogHtmlAndMarkdownPath(
+        markdownFile,
+        this.blogRootPath
+      )
 
       const {
         metaDataObject,
@@ -132,6 +180,7 @@ class BlogController {
         htmlContent: string
         metaDataObject: IMarkdownMetaDataObject
       } = req.body
+
       const htmlFile = FileDirHelpers.changeFileExtension(
         markdownFile,
         '.md',
@@ -147,27 +196,52 @@ class BlogController {
         constants.TAG_DIR_NAME,
         constants.TAG_HTML_DIR_NAME
       )
-      const markdownFilePath = path.join(this.markdownDirPath, markdownFile)
 
       /** Make sure edit file is exists */
-      if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
+      if (!this.isEditFileExist(markdownFile)) {
         return next(
           new APIError(
             httpStatus.BAD_REQUEST,
-            `File ${markdownFilePath} doesn't exist`
+            `File ${markdownFile} doesn't exist`
           )
         )
       }
 
-      const oldBlogMetaDataObject: IMarkdownMetaDataObject = HtmlAndMarkdownService.getMarkdownMetaData(
+      /** Handle file location after edit publish mode */
+      // get old file to get old metaDataObject and remove it to take place for edited file */
+      const {
+        htmlFilePath: oldHtmlFilePath,
+        markdownFilePath: oldMarkdownFilePath
+      } = FileDirHelpers.getOldBlogHtmlAndMarkdownPath(
+        markdownFile,
+        this.blogRootPath
+      )
+      // new file location
+      const {
+        htmlFilePath,
         markdownFilePath
+      } = FileDirHelpers.createHtmlAndMarkdownFilePathByPublishMode(
+        metaDataObject.publishMode,
+        this.blogRootPath,
+        markdownFile,
+        htmlFile
       )
 
+      const oldBlogMetaDataObject: IMarkdownMetaDataObject = HtmlAndMarkdownService.getMarkdownMetaData(
+        oldMarkdownFilePath
+      )
+
+      /** Remove old html and markdown file to add new edited files */
+      FileDirHelpers.removeFilePromise(oldMarkdownFilePath)
+      FileDirHelpers.removeFilePromise(oldHtmlFilePath)
+
+      /** Make sure all directories to store file is ready */
+      FileDirHelpers.createDirIfNotExistsOfGivenPath(markdownFilePath)
+      FileDirHelpers.createDirIfNotExistsOfGivenPath(htmlFilePath)
+
       await HtmlAndMarkdownService.editBlog(
-        this.markdownDirPath,
-        this.htmlDirPath,
-        markdownFile,
-        htmlFile,
+        markdownFilePath,
+        htmlFilePath,
         markdownContent,
         htmlContent,
         metaDataObject,
@@ -189,28 +263,44 @@ class BlogController {
     }
   }
 
-  public deleteBlog(req: any, res: Response, next: NextFunction) {
+  public isEditFileExist(markdownFile: string) {
     try {
-      const { markdownFile }: { markdownFile: string } = req.params
       const markdownFilePath: string = path.join(
         this.blogRootPath,
         constants.MARKDOWN_DIR_NAME,
         markdownFile
       )
-      const htmlFile: string = FileDirHelpers.changeFileExtension(
-        markdownFile,
-        '.md',
-        '.html'
-      )
-      const htmlFilePath: string = path.join(
+      const markdownPrivateFilePath: string = path.join(
         this.blogRootPath,
-        constants.HTML_DIR_NAME,
-        htmlFile
+        constants.PRIVATE_DIR_NAME,
+        constants.MARKDOWN_DIR_NAME,
+        markdownFile
       )
 
-      if (!FileDirHelpers.isFileExisted(markdownFilePath)) {
-        return next(new APIError(httpStatus.BAD_REQUEST, 'File is not existed'))
+      if (
+        FileDirHelpers.isFileExisted(markdownFilePath) ||
+        FileDirHelpers.isFileExisted(markdownPrivateFilePath)
+      ) {
+        return true
       }
+
+      return false
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public deleteBlog(req: any, res: Response, next: NextFunction) {
+    try {
+      const { markdownFile }: { markdownFile: string } = req.params
+
+      const {
+        htmlFilePath,
+        markdownFilePath
+      } = FileDirHelpers.getOldBlogHtmlAndMarkdownPath(
+        markdownFile,
+        this.blogRootPath
+      )
 
       /** Get old meta data before delete this blog to use at the next middleware */
       const metaDataObject: IMarkdownMetaDataObject = HtmlAndMarkdownService.getMarkdownMetaData(

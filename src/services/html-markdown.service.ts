@@ -47,34 +47,26 @@ class HtmlMarkdownService {
   }
 
   public saveMarkdownandHtmlFileProcess(
-    fileName: string,
+    htmlPath: string,
+    markdownPath: string,
     htmlContent: string,
     markdownContent: string,
-    blogTagsArray: Array<string>,
-    blogTitle: string,
-    blogPublishMode: string,
-    blogDate: Date,
+    metaDataObject: IMarkdownMetaDataObject,
     blogHomePageLink: string,
     tagUrl: string
   ): Promise<any> {
     /** Append meta data to markdown content */
     markdownContent += this.createMarkdownFileMetaData(
-      blogDate,
-      blogTitle,
-      blogTagsArray,
-      blogPublishMode
+      metaDataObject.date,
+      metaDataObject.title,
+      metaDataObject.tags,
+      metaDataObject.publishMode
     )
-
-    /** Create html and markdown file path */
-    const { htmlPath, markdownPath } = this.createHtmlandMarkdownPaths(fileName)
 
     const fullBlogContent: string = this.createFullHtmlContentOfBlog(
       htmlContent,
       {
-        date: blogDate,
-        title: blogTitle,
-        tags: blogTagsArray,
-        publishMode: blogPublishMode
+        ...metaDataObject
       },
       blogHomePageLink,
       tagUrl
@@ -335,10 +327,8 @@ class HtmlMarkdownService {
   }
 
   public async editBlog(
-    markdownDirPath: string,
-    htmlDirPath: string,
-    markdownFile: string,
-    htmlFile: string,
+    markdownFilePath: string,
+    htmlFilePath: string,
     markdownContent: string,
     htmlContent: string,
     metaDataObject: IMarkdownMetaDataObject,
@@ -347,9 +337,6 @@ class HtmlMarkdownService {
   ): Promise<any> {
     try {
       const { date, tags, title, publishMode } = metaDataObject
-
-      const markdownFilePath: string = path.join(markdownDirPath, markdownFile)
-      const htmlFilePath: string = path.join(htmlDirPath, htmlFile)
 
       const metaDataString = this.createMarkdownFileMetaData(
         date,

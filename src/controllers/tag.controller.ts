@@ -34,6 +34,7 @@ class TagController {
       const { newFileName } = req.body
       const { metaDataObject, minRead } = req
 
+      /** Make sure all directories that is used to store file are created */
       FileDirHelpers.createDirIfNotExistsOfGivenPath(this.tagConfigDirPath)
       FileDirHelpers.createDirIfNotExistsOfGivenPath(this.tagHtmlDirPath)
 
@@ -71,17 +72,42 @@ class TagController {
         htmlFile
       )
 
-      await TagService.handleTagsOfBlogAfterEditBlog(
-        newBlogMetaDatObject,
-        oldBlogMetaDataObject,
-        blogLink,
-        this.tagDirPath,
-        this.blogDefaultUrl,
-        htmlFile,
-        this.tagUrl,
-        minRead
-      )
-
+      if (
+        oldBlogMetaDataObject.publishMode === constants.PUBLISH_MODES.PUBLISH &&
+        newBlogMetaDatObject.publishMode === constants.PUBLISH_MODES.PUBLISH
+      ) {
+        await TagService.handleTagsOfBlogAfterEditBlog(
+          newBlogMetaDatObject,
+          oldBlogMetaDataObject,
+          blogLink,
+          this.tagDirPath,
+          this.blogDefaultUrl,
+          htmlFile,
+          this.tagUrl,
+          minRead
+        )
+      } else if (
+        oldBlogMetaDataObject.publishMode === constants.PUBLISH_MODES.PRIVATE &&
+        newBlogMetaDatObject.publishMode === constants.PUBLISH_MODES.PUBLISH
+      ) {
+        await TagService.writeNewBlogLinkToTagsProcess(
+          this.tagDirPath,
+          this.tagUrl,
+          blogLink,
+          newBlogMetaDatObject,
+          minRead
+        )
+      } else if (
+        oldBlogMetaDataObject.publishMode === constants.PUBLISH_MODES.PUBLISH &&
+        newBlogMetaDatObject.publishMode === constants.PUBLISH_MODES.PRIVATE
+      ) {
+        await TagService.removeDeletedBlogLinkFromTags(
+          oldBlogMetaDataObject.tags,
+          this.tagDirPath,
+          blogLink,
+          this.tagUrl
+        )
+      }
       return next()
     } catch (error) {
       return next(error)
@@ -98,6 +124,8 @@ class TagController {
         metaDataObject,
         markdownFile
       }: { metaDataObject: IMarkdownMetaDataObject; markdownFile: string } = req
+
+      /** If delete file is different from private then remove them from all tags */
       const htmlFile = FileDirHelpers.changeFileExtension(
         markdownFile,
         '.md',
@@ -108,13 +136,14 @@ class TagController {
         constants.HTML_DIR_NAME,
         htmlFile
       )
-
+      //if (metaDataObject.publishMode !== constants.PUBLISH_MODES.PRIVATE) {
       await TagService.removeDeletedBlogLinkFromTags(
-        metaDataObject.tags,
+        metaDataObject,
         this.tagDirPath,
         blogLink,
         this.tagUrl
       )
+      //}
 
       req.blogLink = blogLink
 

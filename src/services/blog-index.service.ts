@@ -9,6 +9,7 @@ import HtmlBlockTemplate from '../helpers/blog-html-element-template'
 import BlogUITemplate from '../lib/blog-ui-template'
 import { IMarkdownMetaDataObject } from '../services/html-markdown.service'
 import MyArrayHelpers from '../helpers/my-array-helpers'
+import MyCustomHelpers from '../helpers/my-custom-helpers'
 
 export interface IBlogInfoInIndexConfig {
   title: string
@@ -29,7 +30,7 @@ class BlogIndexService {
     newBlogMetaDatObject: IMarkdownMetaDataObject,
     minRead: number,
     tagUrl: string
-  ) {
+  ): Promise<any> {
     try {
       const indexConfigFilePath: string = path.join(blogRootPath, 'index.json')
       const indexHtmlFilePath: string = path.join(blogRootPath, 'index.html')
@@ -59,16 +60,17 @@ class BlogIndexService {
         htmlDirPath
       )
 
-      this.generateNewIndexHtmlFile(
-        indexConfigObject.blogs,
-        indexHtmlFilePath,
-        tagUrl
+      const publishBlogs = this.getOnlyPublishBlogsConfig(
+        indexConfigObject.blogs
       )
 
-      FileDirHelpers.writeFilePromise(
-        indexConfigFilePath,
-        JSON.stringify(indexConfigObject)
-      )
+      return Promise.all([
+        this.generateNewIndexHtmlFile(publishBlogs, indexHtmlFilePath, tagUrl),
+        FileDirHelpers.writeFilePromise(
+          indexConfigFilePath,
+          JSON.stringify(indexConfigObject)
+        )
+      ])
     } catch (error) {
       throw error
     }
@@ -214,8 +216,12 @@ class BlogIndexService {
     tagUrl: string
   ): Promise<any> {
     try {
+      const publishBlogs: Array<IBlogInfoInIndexConfig> = this.getOnlyPublishBlogsConfig(
+        blogInfoArr
+      )
+
       const homePageHtmlContent: string = this.prepareIndexHtmlTemplate(
-        blogInfoArr,
+        publishBlogs,
         tagUrl
       )
 
@@ -223,6 +229,21 @@ class BlogIndexService {
         indexHtmlFilePath,
         homePageHtmlContent
       )
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public getOnlyPublishBlogsConfig(
+    blogInfoArray: Array<IBlogInfoInIndexConfig>
+  ): Array<IBlogInfoInIndexConfig> {
+    try {
+      const result: Array<IBlogInfoInIndexConfig> = blogInfoArray.filter(
+        (blog: IBlogInfoInIndexConfig) =>
+          blog.publishMode === constants.PUBLISH_MODES.PUBLISH
+      )
+
+      return result
     } catch (error) {
       throw error
     }

@@ -58,7 +58,18 @@ class BlogDirectoryController {
 
   public getAllMarkdownFiles(req: any, res: Response, next: NextFunction) {
     try {
-      const rootDir = fs.readdirSync(this.markdownDirPath)
+      let rootDir: Array<string> = fs.readdirSync(this.markdownDirPath)
+      const privateMarkdownDirPath: string = path.join(
+        this.blogRootPath,
+        constants.PRIVATE_DIR_NAME,
+        constants.MARKDOWN_DIR_NAME
+      )
+      FileDirHelpers.createDirIfNotExistsOfGivenPath(privateMarkdownDirPath)
+      const privateMarkdownFiles: Array<string> = fs.readdirSync(
+        privateMarkdownDirPath
+      )
+
+      rootDir = [...rootDir, ...privateMarkdownFiles]
 
       /** Pass all directories and files inside markdown directory to req and move to next middleware */
       req.rootDir = rootDir
@@ -101,7 +112,7 @@ class BlogDirectoryController {
         minRead: number
       } = req
 
-      BlogIndexService.generateIndexHtmlFileWithNewBlog(
+      await BlogIndexService.generateIndexHtmlFileWithNewBlog(
         this.blogRootPath,
         this.blogDefaultUrl,
         this.htmlDirPath,
