@@ -32,6 +32,10 @@ class BlogIndexService {
     tagUrl: string
   ): Promise<any> {
     try {
+      MyCustomHelpers.logObjectDetail(
+        newBlogMetaDatObject,
+        'newBlogMetaDatObject:'
+      )
       const indexConfigFilePath: string = path.join(blogRootPath, 'index.json')
       const indexHtmlFilePath: string = path.join(blogRootPath, 'index.html')
       let indexConfigObject: any = this.getIndexConfigObject(
@@ -63,6 +67,8 @@ class BlogIndexService {
       const publishBlogs = this.getOnlyPublishBlogsConfig(
         indexConfigObject.blogs
       )
+
+      MyCustomHelpers.logObjectDetail(indexConfigObject)
 
       return Promise.all([
         this.generateNewIndexHtmlFile(publishBlogs, indexHtmlFilePath, tagUrl),

@@ -39,7 +39,7 @@ class BlogHtmlElementTemplate {
   ): string {
     let result = ''
     allTagsOfBlog.forEach(tag => {
-      result += `<span><a href="${tagUrl}/${tag}.html" class="tag">${tag}</a></span>`
+      result += `<span><a href="./${tag}.html" class="tag">${tag}</a></span>`
     })
 
     return result
@@ -51,7 +51,7 @@ class BlogHtmlElementTemplate {
   ): string {
     let result = ''
     allTagsOfBlog.forEach(tag => {
-      result += `<span><a href="${tagUrl}/${tag}.html" class="tag">${tag}</a></span>`
+      result += `<span><a href="./${constants.TAG_DIR_NAME}/${constants.TAG_HTML_DIR_NAME}/${tag}.html" class="tag">${tag}</a></span>`
     })
 
     return result
@@ -94,7 +94,7 @@ class BlogHtmlElementTemplate {
     tagArray.forEach(tag => {
       const tagLinkElement = `
       <li>
-        <a class="tag" href="${tagUrl}/${tag}.html">${tag}</a>
+        <a class="tag" href="../${constants.TAG_DIR_NAME}/${constants.TAG_HTML_DIR_NAME}/${tag}.html">${tag}</a>
       </li>
       `
 
@@ -106,7 +106,7 @@ class BlogHtmlElementTemplate {
 
   public static createOtherTagLink(tagName: string, tagUrl: string): string {
     return `
-    <a href="${tagUrl}" class="tag">${tagName}</a>`
+    <a href="./${tagName}.html" class="tag">${tagName}</a>`
   }
 }
 
