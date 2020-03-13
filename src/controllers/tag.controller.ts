@@ -66,11 +66,6 @@ class TagController {
         '.md',
         '.html'
       )
-      const blogLink: string = path.join(
-        this.blogDefaultUrl,
-        constants.HTML_DIR_NAME,
-        htmlFile
-      )
 
       if (
         oldBlogMetaDataObject.publishMode === constants.PUBLISH_MODES.PUBLISH &&
@@ -79,7 +74,7 @@ class TagController {
         await TagService.handleTagsOfBlogAfterEditBlog(
           newBlogMetaDatObject,
           oldBlogMetaDataObject,
-          blogLink,
+          htmlFile,
           this.tagDirPath,
           this.blogDefaultUrl,
           htmlFile,
@@ -93,7 +88,7 @@ class TagController {
         await TagService.writeNewBlogLinkToTagsProcess(
           this.tagDirPath,
           this.tagUrl,
-          blogLink,
+          htmlFile,
           newBlogMetaDatObject,
           minRead
         )
@@ -104,7 +99,7 @@ class TagController {
         await TagService.removeDeletedBlogLinkFromTags(
           oldBlogMetaDataObject.tags,
           this.tagDirPath,
-          blogLink,
+          htmlFile,
           this.tagUrl
         )
       }
@@ -131,21 +126,16 @@ class TagController {
         '.md',
         '.html'
       )
-      const blogLink = path.join(
-        this.blogDefaultUrl,
-        constants.HTML_DIR_NAME,
-        htmlFile
-      )
       //if (metaDataObject.publishMode !== constants.PUBLISH_MODES.PRIVATE) {
       await TagService.removeDeletedBlogLinkFromTags(
         metaDataObject,
         this.tagDirPath,
-        blogLink,
+        htmlFile,
         this.tagUrl
       )
       //}
 
-      req.blogLink = blogLink
+      req.blogLink = htmlFile
 
       return next()
     } catch (error) {

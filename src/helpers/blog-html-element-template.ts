@@ -3,7 +3,7 @@ import constants from '../common/constants'
 
 class BlogHtmlElementTemplate {
   public static createTagBlogLink(
-    blogLink: string,
+    htmlFile: string,
     title: string,
     date: Date,
     blogOfTagTags: string,
@@ -12,7 +12,7 @@ class BlogHtmlElementTemplate {
     return `
                 <div class="blog-of-tag">
                   <h3>
-                    <a href="${blogLink}"
+                    <a href="../../${constants.HTML_DIR_NAME}/${htmlFile}"
                       >${title}</a
                     >
                   </h3>
@@ -58,7 +58,7 @@ class BlogHtmlElementTemplate {
   }
 
   public static createHomePageBlogLink(
-    blogLink: string,
+    htmlFile: string,
     title: string,
     date: Date,
     minRead: number,
@@ -67,7 +67,7 @@ class BlogHtmlElementTemplate {
     return `
             <div class="index-post">
               <h3>
-                <a href="${blogLink}"
+                <a href="./${constants.HTML_DIR_NAME}/${htmlFile}"
                   >${title}</a
                 >
               </h3>

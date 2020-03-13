@@ -99,7 +99,7 @@ class BlogUITemplate {
 
   <body>
     <div class="blog-logo">
-      <a href="{{blogHomePageLink}}"
+      <a href="../index.html"
         ><img src="../img/engine-img/shiba-with-glasses.jpg" alt="Blog Logo Image"
       /></a>
     </div>
@@ -177,7 +177,7 @@ class BlogUITemplate {
 
       <body>
         <div class="blog-logo">
-          <a href="file:/D:/Hi-Blogs/index.html"
+          <a href="../../index.html"
             ><img
               src="../../img/engine-img/shiba-with-glasses.jpg"
               alt="Blog Logo Image"

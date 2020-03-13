@@ -32,21 +32,15 @@ class TagService {
     blogDefaultUrl: string,
     tagUrl: string,
     tagDirPath: string,
-    htmlFileName: string,
+    htmlFile: string,
     newBlogMetaDataObject: IMarkdownMetaDataObject,
     minRead: number
   ): Promise<any> {
     try {
-      const blogLink = path.join(
-        blogDefaultUrl,
-        constants.HTML_DIR_NAME,
-        htmlFileName
-      )
-
       return this.writeNewBlogLinkToTagsProcess(
         tagDirPath,
         tagUrl,
-        blogLink,
+        htmlFile,
         newBlogMetaDataObject,
         minRead
       )

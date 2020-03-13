@@ -32,19 +32,10 @@ class BlogIndexService {
     tagUrl: string
   ): Promise<any> {
     try {
-      MyCustomHelpers.logObjectDetail(
-        newBlogMetaDatObject,
-        'newBlogMetaDatObject:'
-      )
       const indexConfigFilePath: string = path.join(blogRootPath, 'index.json')
       const indexHtmlFilePath: string = path.join(blogRootPath, 'index.html')
       let indexConfigObject: any = this.getIndexConfigObject(
         indexConfigFilePath
-      )
-      const newBlogLink: string = path.join(
-        blogDefaultUrl,
-        constants.HTML_DIR_NAME,
-        `${newFileName}.html`
       )
 
       /** Add new blog info to index config */
@@ -53,7 +44,7 @@ class BlogIndexService {
         publishMode: newBlogMetaDatObject.publishMode,
         date: newBlogMetaDatObject.date,
         tags: newBlogMetaDatObject.tags,
-        blogLink: newBlogLink,
+        blogLink: `${newFileName}.html`,
         fileName: newFileName,
         minRead
       }

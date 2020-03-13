@@ -144,12 +144,6 @@ class BlogDirectoryController {
         minRead: number
       } = req
 
-      const blogLink = path.join(
-        this.blogDefaultUrl,
-        constants.HTML_DIR_NAME,
-        htmlFile
-      )
-
       const htmlFileName = FileDirHelpers.changeFileExtension(
         htmlFile,
         '.html',
@@ -158,7 +152,7 @@ class BlogDirectoryController {
 
       const blogInfoObject: IBlogInfoInIndexConfig = {
         ...newBlogMetaDatObject,
-        blogLink,
+        blogLink: htmlFile,
         fileName: htmlFileName,
         minRead
       }
