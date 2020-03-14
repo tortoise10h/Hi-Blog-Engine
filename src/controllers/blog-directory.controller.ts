@@ -71,6 +71,9 @@ class BlogDirectoryController {
 
       rootDir = [...rootDir, ...privateMarkdownFiles]
 
+      /** Sort by alphabet ascending */
+      rootDir.sort()
+
       /** Pass all directories and files inside markdown directory to req and move to next middleware */
       req.rootDir = rootDir
 

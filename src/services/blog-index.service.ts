@@ -59,8 +59,6 @@ class BlogIndexService {
         indexConfigObject.blogs
       )
 
-      MyCustomHelpers.logObjectDetail(indexConfigObject)
-
       return Promise.all([
         this.generateNewIndexHtmlFile(publishBlogs, indexHtmlFilePath, tagUrl),
         FileDirHelpers.writeFilePromise(

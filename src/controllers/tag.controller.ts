@@ -71,6 +71,7 @@ class TagController {
         oldBlogMetaDataObject.publishMode === constants.PUBLISH_MODES.PUBLISH &&
         newBlogMetaDatObject.publishMode === constants.PUBLISH_MODES.PUBLISH
       ) {
+        /** If old blog publish mode is publish and new still publish then handle normally */
         await TagService.handleTagsOfBlogAfterEditBlog(
           newBlogMetaDatObject,
           oldBlogMetaDataObject,
@@ -85,6 +86,9 @@ class TagController {
         oldBlogMetaDataObject.publishMode === constants.PUBLISH_MODES.PRIVATE &&
         newBlogMetaDatObject.publishMode === constants.PUBLISH_MODES.PUBLISH
       ) {
+        /** If old blog publish mode is private and new is publish
+         * then handle add this blog link to all tags of that blog
+         * */
         await TagService.writeNewBlogLinkToTagsProcess(
           this.tagDirPath,
           this.tagUrl,
@@ -96,6 +100,9 @@ class TagController {
         oldBlogMetaDataObject.publishMode === constants.PUBLISH_MODES.PUBLISH &&
         newBlogMetaDatObject.publishMode === constants.PUBLISH_MODES.PRIVATE
       ) {
+        /** If old blog publish mode is publish and new is private
+         * then has to remove it from all tags of it
+         * */
         await TagService.removeDeletedBlogLinkFromTags(
           oldBlogMetaDataObject.tags,
           this.tagDirPath,

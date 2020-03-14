@@ -730,12 +730,20 @@ class TagService {
         tagUrl
       )
 
-      return Promise.all([
-        /** Write tag config file **/
-        FileDirHelpers.writeFilePromise(
+      /** If blog of tag is empty then delete tag else just write new config down */
+      let writeTagConfigPromise: Promise<any>
+      if (tagJSONObject.blogs.length > 0) {
+        writeTagConfigPromise = FileDirHelpers.writeFilePromise(
           tagConfigFilePath,
           JSON.stringify(tagJSONObject)
-        ),
+        )
+      } else {
+        writeTagConfigPromise = this.deleteTag(tagConfigFilePath, tagFilePath)
+      }
+
+      return Promise.all([
+        /** Write tag config file **/
+        writeTagConfigPromise,
         /** Write tag html file **/
         FileDirHelpers.writeFilePromise(tagFilePath, tagHtmlFileData)
       ])
@@ -772,6 +780,20 @@ class TagService {
         tagDirPath,
         tagUrl
       )
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public deleteTag(
+    tagConfigFilePath: string,
+    tagHtmlFilePath: string
+  ): Promise<any> {
+    try {
+      return Promise.all([
+        FileDirHelpers.removeFilePromise(tagConfigFilePath),
+        FileDirHelpers.removeFilePromise(tagHtmlFilePath)
+      ])
     } catch (error) {
       throw error
     }
