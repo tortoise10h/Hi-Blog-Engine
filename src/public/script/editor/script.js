@@ -1,13 +1,13 @@
 const editor = document.getElementById('editor')
 const markdownArea = document.getElementById('markdown')
 
-/** Scroll textarea and markdown display zone at the same time */
+/** ===== Scroll textarea and markdown display zone at the same time ===== */
 const selectScrollEditor = e => {
   markdownArea.scrollTop = editor.scrollTop
 }
 editor.addEventListener('scroll', selectScrollEditor, false)
 
-/** Load markdown text on left side and display as html on right side */
+/** ===== Load markdown text on left side and display as html on right side ===== */
 window.onload = () => {
   const convertTextToMarkdown = () => {
     let markdownText = editor.value
@@ -23,7 +23,12 @@ window.onload = () => {
   convertTextToMarkdown()
 }
 
-/** Handle press publish mode dropdown */
+/** ===== Hanle on paste image on text area ===== */
+editor.addEventListener('paste', async e => {
+  await handlePasteImageToTextarea(e)
+})
+
+/** ===== Handle press publish mode dropdown ===== */
 const publishModeItems = document.getElementsByClassName(
   'blog-publish-mode-item'
 )
@@ -73,7 +78,7 @@ saveBlogButton.addEventListener('click', () => {
   document.getElementById('newFileName').focus()
 })
 
-/** When press confirm save */
+/** ===== When press confirm save ===== */
 confirmSaveBtn.addEventListener('click', async () => {
   try {
     const editor = document.getElementById('editor')

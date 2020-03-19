@@ -94,7 +94,7 @@ saveBlogChangeBtn.addEventListener('click', async () => {
     const { message } = data
 
     ClientResponse.successToast('Save file successfully', message)
-    window.location.href = `${DEFAULT_URL}`
+    // window.location.href = `${DEFAULT_URL}`
   } catch (error) {
     if (error.response) {
       const { data } = error.response

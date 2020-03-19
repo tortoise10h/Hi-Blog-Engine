@@ -30,6 +30,7 @@ class Config {
       constants.TAG_DIR_NAME,
       constants.TAG_HTML_DIR_NAME
     )
+    const baseBlogImageLocation = path.join(blogRootPath, 'img', 'blog-img')
 
     return {
       blogRootPath,
@@ -39,7 +40,8 @@ class Config {
       tagDirPath,
       tagConfigDirPath,
       tagHtmlDirPath,
-      tagUrl
+      tagUrl,
+      baseBlogImageLocation
     }
   }
 }

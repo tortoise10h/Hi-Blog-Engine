@@ -58,7 +58,9 @@ class BlogDirectoryController {
 
   public getAllMarkdownFiles(req: any, res: Response, next: NextFunction) {
     try {
-      let rootDir: Array<string> = fs.readdirSync(this.markdownDirPath)
+      let publishAndNonpublishMarkdownFiles: Array<string> = fs.readdirSync(
+        this.markdownDirPath
+      )
       const privateMarkdownDirPath: string = path.join(
         this.blogRootPath,
         constants.PRIVATE_DIR_NAME,
@@ -69,13 +71,15 @@ class BlogDirectoryController {
         privateMarkdownDirPath
       )
 
-      rootDir = [...rootDir, ...privateMarkdownFiles]
+      const allMarkdownFiles = [
+        ...publishAndNonpublishMarkdownFiles,
+        ...privateMarkdownFiles
+      ]
 
       /** Sort by alphabet ascending */
-      rootDir.sort()
+      allMarkdownFiles.sort()
 
-      /** Pass all directories and files inside markdown directory to req and move to next middleware */
-      req.rootDir = rootDir
+      req.allMarkdownFiles = allMarkdownFiles
 
       return next()
     } catch (err) {
@@ -209,10 +213,27 @@ class BlogDirectoryController {
 
   public renderWritingPage(req: any, res: Response, next: NextFunction) {
     try {
-      const { rootDir } = req
+      const { allMarkdownFiles } = req
 
       res.render('editor', {
-        rootDir
+        allMarkdownFiles
+      })
+    } catch (error) {
+      return next(error)
+    }
+  }
+
+  public handleResponseImagePathAfterUpload(
+    req: any,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const img: any = req.file
+      const imgPath: string = `../img/blog-img/${img.filename}`
+
+      return APIResponse.success(res, 'save image succesfully', {
+        imgPath
       })
     } catch (error) {
       return next(error)

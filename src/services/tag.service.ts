@@ -267,8 +267,7 @@ class TagService {
           )
           let tagNewHtmlData = this.createTagHtmlFileData(
             publishBlogs,
-            tagsName[index],
-            tagUrl
+            tagsName[index]
           )
 
           /** Append all current tag to each tag new html data */
@@ -305,10 +304,7 @@ class TagService {
   ): string {
     let result = ''
     for (let i = 0; i < tagHtmlFiles.length; i++) {
-      result += BlogHtmlElementTemplate.createOtherTagLink(
-        tagHtmlFilesName[i],
-        tagsUrl[i]
-      )
+      result += BlogHtmlElementTemplate.createOtherTagLink(tagHtmlFilesName[i])
     }
 
     return result
@@ -325,8 +321,7 @@ class TagService {
       if (blogConfigInTag.publishMode !== constants.PUBLISH_MODES.PRIVATE) {
         /** If blog is not private then create html link */
         const blogOfTagTags: string = BlogHtmlElementTemplate.createBlogOfTagTags(
-          blogConfigInTag.tags,
-          tagUrl
+          blogConfigInTag.tags
         )
         htmlLinkElement = BlogHtmlElementTemplate.createTagBlogLink(
           blogConfigInTag.blogLink,
@@ -392,8 +387,7 @@ class TagService {
 
       const tagFileTemplate: string = this.createTagHtmlFileData(
         publishBlogs,
-        tag,
-        tagUrl
+        tag
       )
 
       return tagFileTemplate
@@ -429,16 +423,14 @@ class TagService {
 
   public createTagHtmlFileData(
     blogObjectArray: Array<IBlogConfigInTag>,
-    tag: string,
-    tagUrl: string
+    tag: string
   ): string {
     let tagFileTemplate: string = BlogUITemplate.getTagFileTemplate()
     let htmlTableContent = ''
 
     blogObjectArray.forEach((blog: IBlogConfigInTag) => {
       const blogOfTagTags: string = BlogHtmlElementTemplate.createBlogOfTagTags(
-        blog.tags,
-        tagUrl
+        blog.tags
       )
       const blogLinkElement = BlogHtmlElementTemplate.createTagBlogLink(
         blog.blogLink,
@@ -580,7 +572,6 @@ class TagService {
     blogLink: string,
     newMetadataObject: IMarkdownMetaDataObject,
     tagDirPath: string,
-    tagUrl: string,
     minRead: number
   ): Promise<any> {
     try {
@@ -608,8 +599,7 @@ class TagService {
         /** Generate new html content for tag file with edited blog new info */
         const tagHtmlFileData: string = this.createTagHtmlFileData(
           tagJSONObject.blogs,
-          tag,
-          tagUrl
+          tag
         )
 
         /** Save html & config content */
@@ -687,7 +677,7 @@ class TagService {
   ): Promise<any> {
     try {
       const removeProcess = blogOldTags.map(tag => {
-        this.removeBlogLinkFromTag(tagDirPath, tag, blogLink, tagUrl)
+        this.removeBlogLinkFromTag(tagDirPath, tag, blogLink)
       })
 
       return Promise.all(removeProcess)
@@ -699,8 +689,7 @@ class TagService {
   public removeBlogLinkFromTag(
     tagDirPath: string,
     tag: string,
-    blogLink: string,
-    tagUrl: string
+    blogLink: string
   ): Promise<any> {
     try {
       const tagFilePath = path.join(
@@ -726,8 +715,7 @@ class TagService {
       const publishBlogs = this.getOnlyPublishBlogsConfig(tagJSONObject.blogs)
       const tagHtmlFileData: string = this.createTagHtmlFileData(
         publishBlogs,
-        tag,
-        tagUrl
+        tag
       )
 
       /** If blog of tag is empty then delete tag else just write new config down */

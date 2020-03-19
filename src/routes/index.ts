@@ -7,6 +7,8 @@ import APIReponse from '../helpers/api-response'
 import BlogController from '../controllers/blog.controller'
 import BlogDirectoryController from '../controllers/blog-directory.controller'
 import TagController from '../controllers/tag.controller'
+import Uploader from '../lib/uploader'
+import multer from 'multer'
 
 const router = express.Router()
 
@@ -85,6 +87,15 @@ router.route('/blogs').post(
   },
   (req: any, res: Response, next: NextFunction) => {
     blogDirectoryController.generateIndexHtmlFileWithNewBlog(req, res, next)
+  }
+)
+
+router.route('/blog-images').post(
+  (req: any, res: Response, next: NextFunction) => {
+    Uploader.uploadBlogImage(req, res, next)
+  },
+  (req: any, res: Response, next: NextFunction) => {
+    blogDirectoryController.handleResponseImagePathAfterUpload(req, res, next)
   }
 )
 

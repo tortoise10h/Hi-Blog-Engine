@@ -33,10 +33,7 @@ class BlogHtmlElementTemplate {
     `
   }
 
-  public static createBlogOfTagTags(
-    allTagsOfBlog: Array<string>,
-    tagUrl: string
-  ): string {
+  public static createBlogOfTagTags(allTagsOfBlog: Array<string>): string {
     let result = ''
     allTagsOfBlog.forEach(tag => {
       result += `<span><a href="./${tag}.html" class="tag">${tag}</a></span>`
@@ -45,10 +42,7 @@ class BlogHtmlElementTemplate {
     return result
   }
 
-  public static createBlogOfHomepageTags(
-    allTagsOfBlog: Array<string>,
-    tagUrl: string
-  ): string {
+  public static createBlogOfHomepageTags(allTagsOfBlog: Array<string>): string {
     let result = ''
     allTagsOfBlog.forEach(tag => {
       result += `<span><a href="./${constants.TAG_DIR_NAME}/${constants.TAG_HTML_DIR_NAME}/${tag}.html" class="tag">${tag}</a></span>`
@@ -86,10 +80,7 @@ class BlogHtmlElementTemplate {
     `
   }
 
-  public static createTagsOfBlog(
-    tagArray: Array<string>,
-    tagUrl: string
-  ): string {
+  public static createTagsOfBlog(tagArray: Array<string>): string {
     let result = ''
     tagArray.forEach(tag => {
       const tagLinkElement = `
@@ -104,7 +95,7 @@ class BlogHtmlElementTemplate {
     return result
   }
 
-  public static createOtherTagLink(tagName: string, tagUrl: string): string {
+  public static createOtherTagLink(tagName: string): string {
     return `
     <a href="./${tagName}.html" class="tag">${tagName}</a>`
   }

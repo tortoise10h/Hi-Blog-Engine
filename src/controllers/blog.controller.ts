@@ -137,7 +137,8 @@ class BlogController {
   public renderEditorPage(req: any, res: Response, next: NextFunction) {
     try {
       const { markdownFile } = req.params
-      const { rootDir } = req
+      const { allMarkdownFiles } = req
+
       const { markdownFilePath } = FileDirHelpers.getOldBlogHtmlAndMarkdownPath(
         markdownFile,
         this.blogRootPath
@@ -154,7 +155,7 @@ class BlogController {
       )
 
       res.render('edit-page', {
-        rootDir,
+        allMarkdownFiles,
         metaDataObject,
         markdownContent,
         markdownFile

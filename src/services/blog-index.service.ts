@@ -175,8 +175,7 @@ class BlogIndexService {
 
     ascendingBlogInfoArr.forEach((blogInfoObject: IBlogInfoInIndexConfig) => {
       const blogOfHomepageTags: string = HtmlBlockTemplate.createBlogOfHomepageTags(
-        blogInfoObject.tags,
-        tagUrl
+        blogInfoObject.tags
       )
 
       const blogLinkElement = HtmlBlockTemplate.createHomePageBlogLink(

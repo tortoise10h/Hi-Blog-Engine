@@ -117,8 +117,7 @@ class HtmlMarkdownService {
         .tz(constants.TIME_ZONE_LOCATION)
         .format('dddd, MMMM Do YYYY')
       const tagsElement: string = HtmlBlockTemplate.createTagsOfBlog(
-        metaDataObject.tags,
-        tagUrl
+        metaDataObject.tags
       )
 
       const blogHtmlTemplate: string = BlogUITemplate.getBlogFileTemplate()
