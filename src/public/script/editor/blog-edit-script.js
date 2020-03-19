@@ -22,6 +22,11 @@ window.onload = () => {
   convertTextToMarkdown()
 }
 
+/** ===== Hanle on paste image on text area ===== */
+editor.addEventListener('paste', async e => {
+  await handlePasteImageToTextarea(e)
+})
+
 /** Handle press publish mode dropdown */
 const publishModeDropdown = document.getElementById(
   'oldBlogPublishModeDropdown'
